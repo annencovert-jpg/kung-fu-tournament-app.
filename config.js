@@ -43,6 +43,38 @@ const CONFIG = {
     adults: { min: 17, max: 120, name: "Adults (17+)" }
   },
   
+  // Host Location Configuration - Defines tournament host locations
+  // This determines which waiver is displayed during registration
+  schoolWaivers: {
+    north: {
+      name: "Austin Kung Fu and Tai Chi",
+      address: "8910 Research Blvd, Suite E1, Austin, TX 78758",
+      waiverText: `
+        <h2>Tournament Waiver - Austin Kung Fu and Tai Chi</h2>
+        <p><strong>Host Location:</strong> Austin Kung Fu and Tai Chi<br>
+        8910 Research Blvd, Suite E1, Austin, TX 78758</p>
+        <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
+        <p>I hereby release Austin Kung Fu and Tai Chi, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+        <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
+        <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
+      `
+    },
+    south: {
+      name: "South Austin Kung Fu and Tai Chi",
+      address: "5214 Burleson Rd, Suite 211, Austin, TX 78744",
+      waiverText: `
+        <h2>Tournament Waiver - South Austin Kung Fu and Tai Chi</h2>
+        <p><strong>Host Location:</strong> South Austin Kung Fu and Tai Chi<br>
+        5214 Burleson Rd, Suite 211, Austin, TX 78744</p>
+        <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
+        <p>I hereby release South Austin Kung Fu and Tai Chi, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+        <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
+        <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
+      `
+    }
+  },
+  
+  // Legacy waivers (kept for backward compatibility with student home locations)
   waivers: {
     "north-austin": `
       <h2>North Austin Location Waiver</h2>

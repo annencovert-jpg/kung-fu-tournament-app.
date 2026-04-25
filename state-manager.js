@@ -19,7 +19,8 @@ class StateManager {
       divisions: {},
       settings: {
         separateByGender: true,
-        separateByRank: true
+        separateByRank: true,
+        tournamentHostLocation: null  // Tracks which location is hosting the tournament
       },
       lastSync: null
     };
@@ -451,6 +452,18 @@ class StateManager {
   updateSettings(settings) {
     this.state.settings = { ...this.state.settings, ...settings };
     this.saveState();
+  }
+  
+  // Set tournament host location
+  setTournamentHostLocation(hostLocation) {
+    this.state.settings.tournamentHostLocation = hostLocation;
+    this.saveState();
+    return hostLocation;
+  }
+  
+  // Get tournament host location
+  getTournamentHostLocation() {
+    return this.state.settings.tournamentHostLocation;
   }
   
   // Toggle master override

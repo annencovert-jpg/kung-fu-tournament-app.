@@ -21,6 +21,9 @@ class TournamentApp {
     this.renderPendingQueue();
     this.buildWalkInForm();
     
+    // Check if tournament host location is set, prompt if not
+    this.checkAndSetHostLocation();
+    
     // Update UI periodically
     setInterval(() => {
       this.updateSyncStatus();
@@ -149,7 +152,7 @@ class TournamentApp {
     });
   }
   
-  // Select location button
+  // Select location button (student's home location)
   selectLocation(locationId) {
     this.selectedLocation = locationId;
     document.getElementById('walkin-location').value = locationId;
@@ -159,8 +162,8 @@ class TournamentApp {
       btn.classList.toggle('selected', btn.dataset.locationId === locationId);
     });
     
-    // Show waiver for selected location
-    this.showWaiver(locationId);
+    // Show waiver based on TOURNAMENT HOST location, not student location
+    this.showHostLocationWaiver();
   }
   
   // Select gender button
@@ -174,14 +177,58 @@ class TournamentApp {
     });
   }
   
-  // Show waiver content
-  showWaiver(locationId) {
+  // Check and set tournament host location on app load
+  checkAndSetHostLocation() {
+    const currentHost = stateManager.getTournamentHostLocation();
+    
+    if (!currentHost) {
+      // Prompt user to select tournament host location
+      this.promptHostLocation();
+    } else {
+      console.log(`Tournament hosted by: ${currentHost}`);
+    }
+  }
+  
+  // Prompt user to select tournament host location
+  promptHostLocation() {
+    const hostOptions = Object.keys(CONFIG.schoolWaivers);
+    const hostNames = hostOptions.map(key => CONFIG.schoolWaivers[key].name);
+    
+    const message = `Welcome! Please select the TOURNAMENT HOST LOCATION:\n\n` +
+                   hostOptions.map((key, i) => `${i + 1}. ${CONFIG.schoolWaivers[key].name}\n   ${CONFIG.schoolWaivers[key].address}`).join('\n\n');
+    
+    const selection = prompt(message + '\n\nEnter 1 or 2:');
+    
+    if (selection === '1' || selection === '2') {
+      const hostKey = hostOptions[parseInt(selection) - 1];
+      stateManager.setTournamentHostLocation(hostKey);
+      this.showSuccessMessage(`Tournament host set to: ${CONFIG.schoolWaivers[hostKey].name}`);
+    } else if (selection !== null) {
+      // Invalid selection, prompt again
+      alert('Invalid selection. Please try again.');
+      this.promptHostLocation();
+    }
+  }
+  
+  // Show waiver based on tournament host location (not student's home location)
+  showHostLocationWaiver() {
     const waiverSection = document.getElementById('waiver-section');
     const waiverContent = document.getElementById('waiver-content');
     
-    const waiverText = CONFIG.waivers[locationId];
-    if (waiverText) {
-      waiverContent.innerHTML = waiverText;
+    const hostLocation = stateManager.getTournamentHostLocation();
+    
+    if (!hostLocation) {
+      waiverContent.innerHTML = '<p style="color: #FF0000;">⚠️ Tournament host location not set. Please reload the app.</p>';
+      waiverSection.style.display = 'block';
+      return;
+    }
+    
+    const hostConfig = CONFIG.schoolWaivers[hostLocation];
+    if (hostConfig && hostConfig.waiverText) {
+      waiverContent.innerHTML = hostConfig.waiverText;
+      waiverSection.style.display = 'block';
+    } else {
+      waiverContent.innerHTML = '<p style="color: #FF0000;">⚠️ Waiver not found for host location.</p>';
       waiverSection.style.display = 'block';
     }
   }
@@ -278,6 +325,15 @@ class TournamentApp {
   
   // Show walk-in form
   showWalkInForm() {
+    // Check if host location is set
+    if (!stateManager.getTournamentHostLocation()) {
+      this.promptHostLocation();
+      if (!stateManager.getTournamentHostLocation()) {
+        // User cancelled, don't show form
+        return;
+      }
+    }
+    
     // Reset form
     document.getElementById('walk-in-form').reset();
     this.selectedRank = null;
@@ -288,7 +344,9 @@ class TournamentApp {
       btn.classList.remove('selected');
     });
     
-    document.getElementById('waiver-section').style.display = 'none';
+    // Always show waiver for the host location immediately
+    this.showHostLocationWaiver();
+    
     document.getElementById('modal-walk-in').style.display = 'flex';
   }
   
@@ -299,6 +357,9 @@ class TournamentApp {
   
   // Submit walk-in registration
   submitWalkIn() {
+    const hostLocation = stateManager.getTournamentHostLocation();
+    const hostConfig = CONFIG.schoolWaivers[hostLocation];
+    
     const formData = {
       name: document.getElementById('walkin-name').value,
       dob: document.getElementById('walkin-dob').value,
@@ -308,6 +369,8 @@ class TournamentApp {
       location: document.getElementById('walkin-location').value,
       gender: document.getElementById('walkin-gender').value,
       waiver_signed: document.getElementById('walkin-waiver').checked,
+      waiver_location: hostLocation,  // Track which waiver was signed
+      waiver_location_name: hostConfig ? hostConfig.name : 'Unknown',
       payment_status: document.getElementById('walkin-payment').checked ? 'paid' : 'pending',
       type: 'walk-in',
       status: 'pending'
