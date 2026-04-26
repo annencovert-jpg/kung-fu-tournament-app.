@@ -35,7 +35,8 @@ class TournamentApp {
   
   // Load school name from config
   loadSchoolName() {
-    document.getElementById('school-name').textContent = CONFIG.school.name;
+    // Use innerHTML to preserve the font-bold and font-light styling in index.html
+    document.getElementById('school-name').innerHTML = '<span class="font-bold">Kung Fu and Tai Chi</span> <span class="font-light">Tournament Manager</span>';
   }
   
   // Setup all event listeners
