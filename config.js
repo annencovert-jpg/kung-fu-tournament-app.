@@ -4,8 +4,7 @@
 // ============================================================================
 // MINDBODY PAYMENT URL - SINGLE SOURCE OF TRUTH
 // ============================================================================
-// UPDATE THIS URL to your Mindbody payment/registration page
-// All "Proceed to Payment" buttons throughout the app will use this URL
+// ⚠️ UPDATE THIS EVERY TOURNAMENT — Replace with current Mindbody payment link before each tournament day
 const MINDBODY_PAYMENT_URL = "https://clients.mindbodyonline.com/classic/ws?studioid=YOUR_STUDIO_ID";
 // ============================================================================
 
