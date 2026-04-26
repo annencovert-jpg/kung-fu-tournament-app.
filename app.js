@@ -88,11 +88,14 @@ class TournamentApp {
     
     // Warning modal actions
     document.getElementById('btn-to-waiver').addEventListener('click', () => {
-      alert('Direct student to waiver station');
+      // Open waiver station in new tab
+      const hostLocation = stateManager.getTournamentHostLocation();
+      window.open(`waiver.html?location=${hostLocation}`, '_blank');
       this.hideWarningModal();
     });
     document.getElementById('btn-to-payment').addEventListener('click', () => {
-      alert('Direct student to payment desk');
+      // Open Mindbody payment in new tab - preserves student session
+      window.open(MINDBODY_PAYMENT_URL, '_blank');
       this.hideWarningModal();
     });
   }
@@ -277,8 +280,98 @@ class TournamentApp {
     const student = stateManager.getStudent(studentId);
     if (student) {
       this.hideSearch();
-      this.verifyStudent(student);
+      // Open verification modal instead of direct check-in
+      this.showVerificationModal(student);
     }
+  }
+  
+  // Show Gatekeeper Verification Modal
+  showVerificationModal(student) {
+    const modal = document.getElementById('modal-verify');
+    const content = document.getElementById('verify-content');
+    
+    const hasWaiver = student.waiver_signed === true;
+    const hasPayment = student.payment_status === 'paid';
+    
+    const waiverIcon = hasWaiver ? '✅' : '❌';
+    const paymentIcon = hasPayment ? '✅' : '❌';
+    const waiverColor = hasWaiver ? '#32CD32' : '#FF0000';
+    const paymentColor = hasPayment ? '#32CD32' : '#FF0000';
+    
+    content.innerHTML = `
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h3 style="font-size: 28px; margin-bottom: 8px;">${student.name || `${student.first_name} ${student.last_name}`}</h3>
+        <p style="opacity: 0.8;">${student.rank || 'Unknown Rank'} | ${student.location || 'Unknown Location'}</p>
+      </div>
+      
+      <div style="background: rgba(255, 215, 0, 0.05); border: 2px solid var(--color-secondary); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h4 style="margin-bottom: 16px; font-size: 20px;">Verification Checklist</h4>
+        
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255, 215, 0, 0.05); border-radius: 8px; margin-bottom: 12px;">
+          <span style="font-size: 36px; color: ${waiverColor};">${waiverIcon}</span>
+          <div style="flex: 1;">
+            <strong style="font-size: 18px;">Waiver Status</strong>
+            <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasWaiver ? 'Waiver signed and on file' : 'Waiver NOT signed'}</p>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255, 215, 0, 0.05); border-radius: 8px;">
+          <span style="font-size: 36px; color: ${paymentColor};">${paymentIcon}</span>
+          <div style="flex: 1;">
+            <strong style="font-size: 18px;">Payment Status</strong>
+            <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasPayment ? 'Payment confirmed' : 'Payment NOT received'}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: rgba(255, 165, 0, 0.1); border: 2px solid var(--color-hover); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <input type="checkbox" id="manual-payment-override" style="width: 24px; height: 24px; cursor: pointer;">
+          <span style="font-size: 18px; font-weight: bold;">🔓 Manually Verify Mindbody Payment</span>
+        </label>
+        <p style="font-size: 14px; opacity: 0.8; margin-top: 8px; margin-left: 36px;">Check this if you've confirmed payment in Mindbody but it's not showing here</p>
+      </div>
+      
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-secondary" onclick="app.hideVerifyModal()" style="flex: 1;">Cancel</button>
+        <button class="btn-primary" id="btn-verify-checkin" disabled style="flex: 2; opacity: 0.5;">✓ Check In Student</button>
+      </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Update check-in button state based on verification
+    const updateCheckInButton = () => {
+      const manualOverride = document.getElementById('manual-payment-override').checked;
+      const checkInBtn = document.getElementById('btn-verify-checkin');
+      
+      const waiverOk = hasWaiver;
+      const paymentOk = hasPayment || manualOverride;
+      const canCheckIn = waiverOk && paymentOk;
+      
+      checkInBtn.disabled = !canCheckIn;
+      checkInBtn.style.opacity = canCheckIn ? '1' : '0.5';
+      checkInBtn.style.cursor = canCheckIn ? 'pointer' : 'not-allowed';
+      
+      if (canCheckIn) {
+        checkInBtn.onclick = () => {
+          // If manual override, update payment status
+          if (manualOverride && !hasPayment) {
+            stateManager.updateStudent(student.id, { payment_status: 'paid' });
+          }
+          this.verifyStudent(student);
+        };
+      }
+    };
+    
+    // Listen for manual override changes
+    setTimeout(() => {
+      const overrideCheckbox = document.getElementById('manual-payment-override');
+      if (overrideCheckbox) {
+        overrideCheckbox.addEventListener('change', updateCheckInButton);
+        updateCheckInButton();
+      }
+    }, 100);
   }
   
   // Verify and check-in student
@@ -286,11 +379,13 @@ class TournamentApp {
     const result = stateManager.checkInStudent(student.id);
     
     if (result.success) {
-      this.showSuccessMessage(`${student.name} checked in successfully!`);
+      this.hideVerifyModal();
+      this.showSuccessMessage(`${student.name || `${student.first_name} ${student.last_name}`} checked in successfully!`);
       this.updateStats();
       this.renderStudentList();
       this.renderPendingQueue();
     } else {
+      this.hideVerifyModal();
       this.showWarning(result);
     }
   }
@@ -579,7 +674,8 @@ class TournamentApp {
   checkInFromList(studentId) {
     const student = stateManager.getStudent(studentId);
     if (student) {
-      this.verifyStudent(student);
+      // Use verification modal for all check-ins
+      this.showVerificationModal(student);
     }
   }
   

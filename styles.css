@@ -63,8 +63,15 @@ body {
 .header h1 {
   color: var(--color-secondary);
   font-size: var(--font-xlarge);
-  font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.font-light {
+  font-weight: 300;
 }
 
 .header-controls {

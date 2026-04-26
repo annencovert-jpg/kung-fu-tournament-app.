@@ -1,9 +1,17 @@
 // White-Label Configuration for Tournament Management App
 // Modify this file to customize the app for different schools
 
+// ============================================================================
+// MINDBODY PAYMENT URL - SINGLE SOURCE OF TRUTH
+// ============================================================================
+// UPDATE THIS URL to your Mindbody payment/registration page
+// All "Proceed to Payment" buttons throughout the app will use this URL
+const MINDBODY_PAYMENT_URL = "https://clients.mindbodyonline.com/classic/ws?studioid=YOUR_STUDIO_ID";
+// ============================================================================
+
 const CONFIG = {
   school: {
-    name: "Master Joe's Kung Fu Academy",
+    name: "Kung Fu and Tai Chi Tournament Manager",
     locations: [
       { id: "north-austin", name: "North Austin", color: "#FFD700" },
       { id: "south-austin", name: "South Austin", color: "#FFA500" },
@@ -79,42 +87,42 @@ const CONFIG = {
     "north-austin": `
       <h2>North Austin Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - North Austin Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `,
     "south-austin": `
       <h2>South Austin Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - South Austin Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `,
     "lakeway": `
       <h2>Lakeway Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - Lakeway Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `,
     "georgetown": `
       <h2>Georgetown Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - Georgetown Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `,
     "san-antonio": `
       <h2>San Antonio Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - San Antonio Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `,
     "new-orleans": `
       <h2>New Orleans Location Waiver</h2>
       <p>I, the undersigned, acknowledge that participation in martial arts training and tournament competition involves risks including but not limited to: physical injury, property damage, and other unforeseen hazards.</p>
-      <p>I hereby release Master Joe's Kung Fu Academy - New Orleans Location, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
+      <p>I hereby release this location's Kung Fu and Tai Chi Academy, its instructors, staff, and affiliates from any and all liability for injuries or damages that may occur during participation in this tournament.</p>
       <p><strong>Medical Authorization:</strong> I authorize tournament staff to seek emergency medical treatment if necessary.</p>
       <p><strong>Media Release:</strong> I grant permission for photographs and videos taken during the tournament to be used for promotional purposes.</p>
     `
