@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Student Waiver Station</title>
+  <title>Tournament Registration & Waiver</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <style>
+    body {
+      background: #000000;
+      color: #FFD700;
+      padding: 20px;
+    }
     .waiver-station {
       max-width: 900px;
       margin: 0 auto;
       padding: 24px;
     }
-    
     .waiver-header {
       text-align: center;
       margin-bottom: 32px;
@@ -21,26 +25,16 @@
       border: 3px solid var(--color-secondary);
       border-radius: 12px;
     }
-    
-    .waiver-content-box {
-      background: rgba(255, 215, 0, 0.05);
-      border: 3px solid var(--color-secondary);
+    .success-message {
+      background: #32CD32;
+      color: #000;
+      padding: 32px;
       border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      max-height: 500px;
-      overflow-y: auto;
-      line-height: 1.8;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 24px 0;
     }
-    
-    .signature-section {
-      background: rgba(255, 215, 0, 0.05);
-      border: 3px solid var(--color-secondary);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    
     .signature-canvas {
       width: 100%;
       height: 200px;
@@ -50,125 +44,139 @@
       cursor: crosshair;
       touch-action: none;
     }
-    
-    .signature-controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    
-    .student-info-section {
-      background: rgba(255, 215, 0, 0.05);
-      border: 3px solid var(--color-secondary);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    
-    .info-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    
-    .alert-box {
-      background: rgba(255, 0, 0, 0.2);
-      border: 3px solid var(--color-warning);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
   
-  <div class="waiver-station">
+  <div class="waiver-station" id="main-content">
     <div class="waiver-header">
-      <h1><span class="font-bold">Student Waiver Station</span></h1>
-      <p style="font-size: 18px; margin-top: 12px;">Complete your tournament waiver and signature below</p>
+      <h1><span class="font-bold">Tournament Registration</span></h1>
+      <p style="font-size: 18px; margin-top: 12px;">Complete your registration and sign your waiver below</p>
     </div>
 
-    <div class="alert-box">
-      ⚠️ STUDENTS ONLY - DO NOT MODIFY PAYMENT STATUS ⚠️
+    <!-- Registration Form -->
+    <div id="registration-section">
+      <h2 style="margin-bottom: 16px; color: var(--color-secondary);">Student Information</h2>
+      
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" id="student-name" class="input-large" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="student-email" class="input-large" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Date of Birth *</label>
+        <input type="date" id="student-dob" class="input-large" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="student-phone" class="input-large">
+      </div>
+      
+      <div class="form-group">
+        <label>School Location *</label>
+        <div class="button-grid" id="location-grid"></div>
+        <input type="hidden" id="student-location" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Gender *</label>
+        <div class="button-grid gender-grid" id="gender-grid"></div>
+        <input type="hidden" id="student-gender" required>
+      </div>
+      
+      <div class="form-group" id="ring-preference-container" style="display: none;">
+        <label>For ring placement, compete with:</label>
+        <div class="button-grid" id="ring-preference-grid"></div>
+        <input type="hidden" id="student-ring-preference">
+      </div>
+      
+      <!-- Session-specific fields added dynamically -->
+      <div id="session-specific-fields"></div>
+      
+      <button class="btn-primary btn-large" onclick="proceedToWaiver()" style="margin-top: 24px;">Continue to Waiver →</button>
     </div>
 
-    <!-- Student Information -->
-    <div class="student-info-section">
-      <h2 style="margin-bottom: 16px;">Student Information</h2>
-      <div class="info-row">
-        <div class="form-group">
-          <label>Full Name *</label>
-          <input type="text" id="student-name" class="input-large" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="student-email" class="input-large">
+    <!-- Waiver Section (shown after registration) -->
+    <div id="waiver-section" style="display: none;">
+      <button class="btn-secondary" onclick="backToRegistration()" style="margin-bottom: 16px;">← Back to Registration</button>
+      
+      <div style="background: rgba(255, 215, 0, 0.05); border: 3px solid var(--color-secondary); border-radius: 12px; padding: 24px; margin-bottom: 24px; max-height: 400px; overflow-y: auto;">
+        <div id="waiver-text"></div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h2 style="margin-bottom: 16px; color: var(--color-secondary);">Digital Signature Required</h2>
+        <p style="margin-bottom: 12px;">By signing below, you acknowledge that you have read and agree to the waiver terms above.</p>
+        <canvas id="signature-pad" class="signature-canvas"></canvas>
+        <div style="display: flex; gap: 12px; margin-top: 12px;">
+          <button class="btn-secondary" id="btn-clear-signature">Clear Signature</button>
+          <button class="btn-primary" id="btn-submit-waiver" style="flex: 1;">✓ Submit Registration</button>
         </div>
       </div>
-      <div class="info-row">
-        <div class="form-group">
-          <label>Phone</label>
-          <input type="tel" id="student-phone" class="input-large">
-        </div>
-        <div class="form-group">
-          <label>Student ID (if pre-registered)</label>
-          <input type="text" id="student-id" class="input-large" placeholder="Leave blank for walk-ins">
-        </div>
-      </div>
-    </div>
-
-    <!-- Waiver Content -->
-    <div class="waiver-content-box" id="waiver-text">
-      <h2>Tournament Waiver Agreement</h2>
-      <p>Loading waiver content...</p>
-    </div>
-
-    <!-- Signature Section -->
-    <div class="signature-section">
-      <h2 style="margin-bottom: 16px;">Digital Signature Required</h2>
-      <p style="margin-bottom: 12px;">By signing below, you acknowledge that you have read and agree to the waiver terms above.</p>
-      <canvas id="signature-pad" class="signature-canvas"></canvas>
-      <div class="signature-controls">
-        <button class="btn-secondary" id="btn-clear-signature">Clear Signature</button>
-        <button class="btn-primary" id="btn-submit-waiver" style="flex: 1;">✓ Submit Waiver</button>
-      </div>
-    </div>
-
-    <div class="alert-box">
-      After submitting, proceed to the payment desk to complete registration
     </div>
   </div>
 
   <script src="config.js"></script>
   <script>
-    // Initialize signature pad
-    const canvas = document.getElementById('signature-pad');
-    const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)',
-      penColor: 'rgb(0, 0, 0)'
-    });
+    let signaturePad = null;
+    let sessionType = null;
+    let hostLocation = null;
+    let studentId = null;
+    let existingStudent = null;
 
-    // Resize canvas for high DPI displays
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext('2d').scale(ratio, ratio);
-      signaturePad.clear();
+    // Initialize
+    function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      hostLocation = urlParams.get('location') || localStorage.getItem('tournamentHostLocation');
+      sessionType = urlParams.get('sessionType') || localStorage.getItem('tournament_data') ? 
+        JSON.parse(localStorage.getItem('tournament_data')).settings?.sessionType : null;
+      studentId = urlParams.get('studentId');
+      
+      console.log('Waiver initialized:', { hostLocation, sessionType, studentId });
+      
+      if (!sessionType) {
+        alert('Session type not set. Please check with tournament staff.');
+        return;
+      }
+      
+      loadWaiverText();
+      buildLocationButtons();
+      buildGenderButtons();
+      buildSessionSpecificFields();
+      
+      // If studentId provided, load existing student data
+      if (studentId) {
+        loadExistingStudent(studentId);
+      }
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // Load waiver based on URL parameter or localStorage
-    function loadWaiver() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hostLocation = urlParams.get('location') || localStorage.getItem('tournamentHostLocation');
+    function loadExistingStudent(id) {
+      const tournamentData = JSON.parse(localStorage.getItem('tournament_data') || '{"students":[]}');
+      existingStudent = tournamentData.students.find(s => s.id === id);
       
+      if (existingStudent) {
+        // Pre-fill form
+        document.getElementById('student-name').value = existingStudent.name || '';
+        document.getElementById('student-email').value = existingStudent.email || '';
+        document.getElementById('student-dob').value = existingStudent.dob || '';
+        document.getElementById('student-phone').value = existingStudent.phone || '';
+        
+        if (existingStudent.location) {
+          selectLocation(existingStudent.location);
+        }
+        if (existingStudent.genderIdentity) {
+          selectGender(existingStudent.genderIdentity);
+        }
+      }
+    }
+
+    function loadWaiverText() {
       const waiverContent = document.getElementById('waiver-text');
       
       if (hostLocation && CONFIG.schoolWaivers[hostLocation]) {
@@ -184,71 +192,403 @@
       }
     }
 
-    // Clear signature
-    document.getElementById('btn-clear-signature').addEventListener('click', () => {
-      signaturePad.clear();
-    });
+    function buildLocationButtons() {
+      const grid = document.getElementById('location-grid');
+      grid.innerHTML = '';
+      
+      CONFIG.school.locations.forEach(location => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'grid-button';
+        btn.textContent = location.name;
+        btn.dataset.locationId = location.id;
+        btn.addEventListener('click', () => selectLocation(location.id));
+        grid.appendChild(btn);
+      });
+    }
 
-    // Submit waiver
-    document.getElementById('btn-submit-waiver').addEventListener('click', () => {
+    function buildGenderButtons() {
+      const grid = document.getElementById('gender-grid');
+      grid.innerHTML = '';
+      
+      CONFIG.genders.forEach(gender => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'grid-button';
+        btn.innerHTML = `${gender.icon} ${gender.name}`;
+        btn.dataset.genderId = gender.id;
+        btn.addEventListener('click', () => selectGender(gender.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function buildSessionSpecificFields() {
+      const container = document.getElementById('session-specific-fields');
+      
+      if (sessionType === 'adult') {
+        container.innerHTML = `
+          <div class="form-group">
+            <label>Rank *</label>
+            <div class="button-grid" id="rank-grid"></div>
+            <input type="hidden" id="student-rank" required>
+          </div>
+        `;
+        buildRankButtons();
+      } else if (sessionType === 'kids') {
+        container.innerHTML = `
+          <div class="form-group">
+            <label>Age Group *</label>
+            <div class="button-grid" id="age-group-grid"></div>
+            <input type="hidden" id="student-age-group" required>
+          </div>
+          <div class="form-group">
+            <label>Parent/Guardian Name *</label>
+            <input type="text" id="student-parent-guardian" class="input-large" required>
+          </div>
+        `;
+        buildAgeGroupButtons();
+      }
+    }
+
+    function buildRankButtons() {
+      const grid = document.getElementById('rank-grid');
+      if (!grid) return;
+      
+      grid.innerHTML = '';
+      CONFIG.ranks.forEach(rank => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'grid-button';
+        btn.textContent = rank.name;
+        btn.style.backgroundColor = rank.color;
+        btn.style.color = rank.textColor;
+        btn.dataset.rankId = rank.id;
+        btn.dataset.group = rank.group;
+        btn.addEventListener('click', () => selectRank(rank.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function buildAgeGroupButtons() {
+      const grid = document.getElementById('age-group-grid');
+      if (!grid) return;
+      
+      grid.innerHTML = '';
+      CONFIG.ageGroups.forEach(ageGroup => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'grid-button';
+        btn.textContent = ageGroup.name;
+        btn.dataset.ageGroupId = ageGroup.id;
+        btn.dataset.group = ageGroup.group;
+        btn.addEventListener('click', () => selectAgeGroup(ageGroup.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectLocation(locationId) {
+      document.getElementById('student-location').value = locationId;
+      applyButtonSelection('#location-grid .grid-button', locationId, 'locationId');
+    }
+
+    function selectGender(genderId) {
+      document.getElementById('student-gender').value = genderId;
+      applyButtonSelection('#gender-grid .grid-button', genderId, 'genderId');
+      
+      const ringPrefContainer = document.getElementById('ring-preference-container');
+      if (genderId === 'non-binary' || genderId === 'prefer-not-say') {
+        ringPrefContainer.style.display = 'block';
+        buildRingPreferenceButtons();
+      } else {
+        ringPrefContainer.style.display = 'none';
+        document.getElementById('student-ring-preference').value = genderId === 'male' ? 'male' : 'female';
+      }
+    }
+
+    function buildRingPreferenceButtons() {
+      const grid = document.getElementById('ring-preference-grid');
+      grid.innerHTML = `
+        <button type="button" class="grid-button" data-preference="male" onclick="selectRingPreference('male')">Male Divisions</button>
+        <button type="button" class="grid-button" data-preference="female" onclick="selectRingPreference('female')">Female Divisions</button>
+      `;
+    }
+
+    function selectRingPreference(preference) {
+      document.getElementById('student-ring-preference').value = preference;
+      applyButtonSelection('#ring-preference-grid .grid-button', preference, 'preference');
+    }
+
+    function selectRank(rankId) {
+      document.getElementById('student-rank').value = rankId;
+      applyButtonSelection('#rank-grid .grid-button', rankId, 'rankId');
+    }
+
+    function selectAgeGroup(ageGroupId) {
+      document.getElementById('student-age-group').value = ageGroupId;
+      applyButtonSelection('#age-group-grid .grid-button', ageGroupId, 'ageGroupId');
+    }
+
+    function applyButtonSelection(selector, value, dataAttr) {
+      const buttons = document.querySelectorAll(selector);
+      buttons.forEach(btn => {
+        if (btn.dataset[dataAttr] === value) {
+          btn.classList.add('selected');
+          btn.style.border = '3px solid gold';
+          btn.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+          btn.style.background = 'rgba(255, 215, 0, 0.2)';
+          btn.style.opacity = '1';
+        } else {
+          btn.classList.remove('selected');
+          btn.style.border = '3px solid var(--color-secondary)';
+          btn.style.boxShadow = 'none';
+          btn.style.background = '';
+          btn.style.opacity = '0.5';
+        }
+      });
+    }
+
+    function proceedToWaiver() {
+      // Validate required fields
       const name = document.getElementById('student-name').value.trim();
       const email = document.getElementById('student-email').value.trim();
-      const phone = document.getElementById('student-phone').value.trim();
-      const studentId = document.getElementById('student-id').value.trim();
-
-      // Validation
-      if (!name) {
-        alert('Please enter your name');
+      const dob = document.getElementById('student-dob').value;
+      const location = document.getElementById('student-location').value;
+      const gender = document.getElementById('student-gender').value;
+      
+      if (!name || !email || !dob || !location || !gender) {
+        alert('Please fill in all required fields');
         return;
       }
+      
+      // Session-specific validation
+      if (sessionType === 'adult') {
+        const rank = document.getElementById('student-rank').value;
+        if (!rank) {
+          alert('Please select your rank');
+          return;
+        }
+      } else if (sessionType === 'kids') {
+        const ageGroup = document.getElementById('student-age-group').value;
+        const parentGuardian = document.getElementById('student-parent-guardian').value.trim();
+        if (!ageGroup || !parentGuardian) {
+          alert('Please complete all fields including parent/guardian name');
+          return;
+        }
+      }
+      
+      // Check for duplicate registration
+      checkDuplicate(name, email);
+    }
 
-      if (signaturePad.isEmpty()) {
+    function checkDuplicate(name, email) {
+      const tournamentData = JSON.parse(localStorage.getItem('tournament_data') || '{"students":[]}');
+      const existing = tournamentData.students.find(s => 
+        s.name === name || s.email === email ||
+        (s.first_name && s.last_name && `${s.first_name} ${s.last_name}` === name)
+      );
+      
+      if (existing && !studentId) {
+        // Found duplicate - show waiver for existing student
+        existingStudent = existing;
+        studentId = existing.id;
+        
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+          <div class="waiver-header">
+            <h1 style="font-size: 36px; margin-bottom: 16px;">Welcome Back!</h1>
+            <p style="font-size: 20px;">We found your registration, ${name}!</p>
+          </div>
+          <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--color-secondary); border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: center;">
+            <p style="font-size: 18px;">Your registration is on file. Please sign your waiver below to complete check-in.</p>
+          </div>
+          <div id="waiver-section-existing"></div>
+        `;
+        
+        showWaiverForExisting();
+      } else {
+        // No duplicate - show waiver section
+        document.getElementById('registration-section').style.display = 'none';
+        document.getElementById('waiver-section').style.display = 'block';
+        initializeSignaturePad();
+      }
+    }
+
+    function showWaiverForExisting() {
+      const container = document.getElementById('waiver-section-existing');
+      const hostConfig = CONFIG.schoolWaivers[hostLocation];
+      
+      container.innerHTML = `
+        <div style="background: rgba(255, 215, 0, 0.05); border: 3px solid var(--color-secondary); border-radius: 12px; padding: 24px; margin-bottom: 24px; max-height: 400px; overflow-y: auto;">
+          ${hostConfig ? hostConfig.waiverText : '<p>Waiver text not available</p>'}
+        </div>
+        <div style="margin-bottom: 24px;">
+          <h2 style="margin-bottom: 16px; color: var(--color-secondary);">Digital Signature Required</h2>
+          <p style="margin-bottom: 12px;">By signing below, you acknowledge that you have read and agree to the waiver terms above.</p>
+          <canvas id="signature-pad-existing" class="signature-canvas"></canvas>
+          <div style="display: flex; gap: 12px; margin-top: 12px;">
+            <button class="btn-secondary" onclick="clearSignature()">Clear Signature</button>
+            <button class="btn-primary" onclick="submitExistingWaiver()" style="flex: 1;">✓ Submit Waiver</button>
+          </div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        initializeSignaturePad('signature-pad-existing');
+      }, 100);
+    }
+
+    function backToRegistration() {
+      document.getElementById('registration-section').style.display = 'block';
+      document.getElementById('waiver-section').style.display = 'none';
+    }
+
+    function initializeSignaturePad(canvasId = 'signature-pad') {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      
+      signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: 1.5,
+        maxWidth: 3
+      });
+      
+      resizeCanvas(canvas);
+      window.addEventListener('resize', () => resizeCanvas(canvas));
+    }
+
+    function resizeCanvas(canvas) {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').scale(ratio, ratio);
+      if (signaturePad) {
+        signaturePad.clear();
+      }
+    }
+
+    function clearSignature() {
+      if (signaturePad) {
+        signaturePad.clear();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+      
+      document.getElementById('btn-clear-signature')?.addEventListener('click', clearSignature);
+      document.getElementById('btn-submit-waiver')?.addEventListener('click', submitWaiver);
+    });
+
+    function submitExistingWaiver() {
+      if (!signaturePad || signaturePad.isEmpty()) {
         alert('Please provide your signature');
         return;
       }
-
-      // Get signature data
-      const signatureData = signaturePad.toDataURL();
-
-      // Create waiver record
-      const waiverRecord = {
-        studentId: studentId || `WAIVER-${Date.now()}`,
-        name: name,
-        email: email,
-        phone: phone,
-        signature: signatureData,
-        timestamp: new Date().toISOString(),
-        waiver_signed: true
-      };
-
-      // Save to localStorage
-      const waivers = JSON.parse(localStorage.getItem('student_waivers') || '[]');
-      waivers.push(waiverRecord);
-      localStorage.setItem('student_waivers', JSON.stringify(waivers));
-
-      // If student ID provided, update student record
-      if (studentId) {
-        const tournamentData = JSON.parse(localStorage.getItem('tournament_data') || '{"students":[]}');
-        const student = tournamentData.students.find(s => s.id === studentId);
-        if (student) {
-          student.waiver_signed = true;
-          student.signature = signatureData;
-          localStorage.setItem('tournament_data', JSON.stringify(tournamentData));
-        }
-      }
-
-      alert('✅ Waiver submitted successfully!\n\nPlease proceed to the payment desk to complete your registration.');
       
-      // Clear form
-      document.getElementById('student-name').value = '';
-      document.getElementById('student-email').value = '';
-      document.getElementById('student-phone').value = '';
-      document.getElementById('student-id').value = '';
-      signaturePad.clear();
-    });
+      const signatureData = signaturePad.toDataURL();
+      const hostConfig = CONFIG.schoolWaivers[hostLocation];
+      
+      // Update existing student record
+      const tournamentData = JSON.parse(localStorage.getItem('tournament_data') || '{"students":[]}');
+      const studentIndex = tournamentData.students.findIndex(s => s.id === studentId);
+      
+      if (studentIndex !== -1) {
+        tournamentData.students[studentIndex].waiver_signed = true;
+        tournamentData.students[studentIndex].signatureData = signatureData;
+        tournamentData.students[studentIndex].waiver_timestamp = new Date().toISOString();
+        tournamentData.students[studentIndex].waiverVersion = hostConfig ? hostConfig.waiverText : '';
+        
+        localStorage.setItem('tournament_data', JSON.stringify(tournamentData));
+        showSuccessMessage();
+      }
+    }
 
-    // Load waiver on page load
-    loadWaiver();
+    function submitWaiver() {
+      if (!signaturePad || signaturePad.isEmpty()) {
+        alert('Please provide your signature');
+        return;
+      }
+      
+      const signatureData = signaturePad.toDataURL();
+      
+      // Gather form data
+      const formData = {
+        name: document.getElementById('student-name').value.trim(),
+        email: document.getElementById('student-email').value.trim(),
+        dob: document.getElementById('student-dob').value,
+        phone: document.getElementById('student-phone').value.trim(),
+        location: document.getElementById('student-location').value,
+        genderIdentity: document.getElementById('student-gender').value,
+        ringPreference: document.getElementById('student-ring-preference').value || 
+          (document.getElementById('student-gender').value === 'male' ? 'male' : 'female'),
+        waiver_signed: true,
+        signatureData: signatureData,
+        waiver_timestamp: new Date().toISOString(),
+        waiver_location: hostLocation,
+        waiver_location_name: CONFIG.schoolWaivers[hostLocation]?.name || 'Unknown',
+        waiverVersion: CONFIG.schoolWaivers[hostLocation]?.waiverText || '',
+        payment_status: 'pending',
+        type: 'self-registered',
+        status: 'pending'
+      };
+      
+      // Session-specific fields
+      if (sessionType === 'adult') {
+        const rankInput = document.getElementById('student-rank');
+        formData.rank = rankInput.value;
+        const rankConfig = CONFIG.ranks.find(r => r.id === rankInput.value);
+        formData.originalRegistrationGroup = rankConfig ? rankConfig.group : 1;
+        formData.currentGroup = formData.originalRegistrationGroup;
+      } else if (sessionType === 'kids') {
+        const ageGroupInput = document.getElementById('student-age-group');
+        formData.ageGroup = ageGroupInput.value;
+        formData.parentGuardianName = document.getElementById('student-parent-guardian').value.trim();
+        const ageGroupConfig = CONFIG.ageGroups.find(ag => ag.id === ageGroupInput.value);
+        formData.originalRegistrationGroup = ageGroupConfig ? ageGroupConfig.group : 1;
+        formData.currentGroup = formData.originalRegistrationGroup;
+      }
+      
+      // Split name
+      const nameParts = formData.name.split(' ');
+      formData.first_name = nameParts[0];
+      formData.last_name = nameParts.slice(1).join(' ');
+      
+      // Save to localStorage
+      const tournamentData = JSON.parse(localStorage.getItem('tournament_data') || '{"students":[],"settings":{}}');
+      
+      if (studentId) {
+        // Update existing student
+        const studentIndex = tournamentData.students.findIndex(s => s.id === studentId);
+        if (studentIndex !== -1) {
+          tournamentData.students[studentIndex] = { ...tournamentData.students[studentIndex], ...formData };
+        }
+      } else {
+        // Create new student
+        formData.id = `SR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        tournamentData.students.push(formData);
+      }
+      
+      localStorage.setItem('tournament_data', JSON.stringify(tournamentData));
+      
+      showSuccessMessage();
+    }
+
+    function showSuccessMessage() {
+      const mainContent = document.getElementById('main-content');
+      mainContent.innerHTML = `
+        <div class="success-message">
+          <div style="font-size: 72px; margin-bottom: 16px;">✅</div>
+          <div style="font-size: 32px; margin-bottom: 16px;">Registration Complete!</div>
+          <div style="font-size: 18px; margin-top: 16px; font-weight: normal;">
+            You are registered for the Austin Kung Fu and Tai Chi Tournament.
+          </div>
+          <div style="font-size: 18px; margin-top: 16px; font-weight: normal;">
+            Please hand the device back to the volunteer.
+          </div>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>

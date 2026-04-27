@@ -18,11 +18,14 @@ class StateManager {
       pending: [],
       divisions: {},
       settings: {
-        separateByGender: true,
-        separateByRank: true,
-        tournamentHostLocation: null  // Tracks which location is hosting the tournament
+        separateByGender: false,
+        separateByRank: false,
+        tournamentHostLocation: null,  // Tracks which location is hosting the tournament
+        sessionType: null,  // 'adult' or 'kids'
+        googleSheetsUrl: GOOGLE_SHEET_WEBAPP_URL || ''
       },
-      lastSync: null
+      lastSync: null,
+      syncQueue: []  // Records pending Google Sheets sync
     };
     
     this.init();
@@ -101,7 +104,7 @@ class StateManager {
       const settingsRequest = settingsStore.get('app_settings');
       settingsRequest.onsuccess = () => {
         if (settingsRequest.result) {
-          this.state.settings = settingsRequest.result.value;
+          this.state.settings = { ...this.state.settings, ...settingsRequest.result.value };
         }
       };
       
@@ -116,7 +119,7 @@ class StateManager {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        this.state = JSON.parse(stored);
+        this.state = { ...this.state, ...JSON.parse(stored) };
         this.categorizeStudents();
       }
     } catch (error) {
@@ -156,11 +159,6 @@ class StateManager {
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
-    
-    // Add to sync queue if online
-    if (this.isOnline) {
-      this.scheduleSyncst();
-    }
   }
   
   // Categorize students into checked-in and pending
@@ -175,13 +173,13 @@ class StateManager {
       id: this.generateId(studentData),
       ...studentData,
       timestamp: Date.now(),
-      synced: false
+      synced: false,
+      syncPending: false
     };
     
     this.state.students.push(student);
     this.categorizeStudents();
     this.saveState();
-    this.addToSyncQueue('add', student);
     
     return student;
   }
@@ -197,7 +195,6 @@ class StateManager {
       };
       this.categorizeStudents();
       this.saveState();
-      this.addToSyncQueue('update', this.state.students[index]);
       return this.state.students[index];
     }
     return null;
@@ -216,7 +213,7 @@ class StateManager {
         errors.push('Payment not received');
       }
       
-      if (!student.waiver_signed) {
+      if (!student.waiver_signed && !student.signatureData) {
         errors.push('Waiver not signed');
       }
       
@@ -226,7 +223,7 @@ class StateManager {
           error: errors.join(' and '),
           student: student,
           needsPayment: student.payment_status !== 'paid',
-          needsWaiver: !student.waiver_signed
+          needsWaiver: !student.waiver_signed && !student.signatureData
         };
       }
     }
@@ -401,40 +398,55 @@ class StateManager {
     return age;
   }
   
-  // Get suggested division for student
+  // Get suggested division for student based on session type
   getSuggestedDivision(student) {
-    const age = this.calculateAge(student.dob);
-    if (!age) return 'Unknown';
+    const sessionType = this.getSessionType();
     
-    // Age brackets from config
-    if (age >= 4 && age <= 7) return '4-7 Years';
-    if (age >= 8 && age <= 12) return '8-12 Years';
-    if (age >= 13 && age <= 16) return '13-16 Years';
-    if (age >= 17) return 'Adults';
-    
-    return 'Unknown';
+    if (sessionType === 'kids') {
+      // Age-based grouping for kids
+      const age = this.calculateAge(student.dob);
+      if (!age) return 'Unknown';
+      
+      if (age >= 4 && age <= 6) return 'Ages 4-6';
+      if (age >= 7 && age <= 9) return 'Ages 7-9';
+      if (age >= 10 && age <= 12) return 'Ages 10-12';
+      if (age >= 13 && age <= 17) return 'Ages 13-17';
+      
+      return 'Unknown';
+    } else {
+      // Rank-based grouping for adults
+      const rank = student.rank || 'Unknown';
+      return rank;
+    }
   }
   
   // Generate divisions based on checked-in students
   generateDivisions() {
     const divisions = {};
     const { separateByGender, separateByRank } = this.state.settings;
+    const sessionType = this.getSessionType();
     
     this.state.checkedIn.forEach(student => {
       const age = this.calculateAge(student.dob);
-      const ageBracket = this.getSuggestedDivision(student);
-      const rank = student.rank || 'Unknown';
-      const gender = student.gender || 'neutral';
+      let divisionKey = '';
       
-      // Build division key
-      let divisionKey = ageBracket;
-      
-      if (separateByRank && rank !== 'Unknown') {
-        divisionKey += ` - ${rank}`;
+      if (sessionType === 'kids') {
+        // Kids session: age-based groups
+        const ageBracket = this.getSuggestedDivision(student);
+        divisionKey = ageBracket;
+      } else {
+        // Adult session: rank-based groups
+        const rank = student.rank || 'Unknown';
+        divisionKey = rank;
+        
+        if (separateByRank) {
+          // Further subdivide by specific rank
+          divisionKey = rank;
+        }
       }
       
-      if (separateByGender && gender !== 'neutral') {
-        divisionKey += ` - ${gender.charAt(0).toUpperCase() + gender.slice(1)}`;
+      if (separateByGender && student.ringPreference) {
+        divisionKey += ` - ${student.ringPreference.charAt(0).toUpperCase() + student.ringPreference.slice(1)}`;
       }
       
       if (!divisions[divisionKey]) {
@@ -466,6 +478,128 @@ class StateManager {
     return this.state.settings.tournamentHostLocation;
   }
   
+  // Set session type (adult or kids)
+  setSessionType(sessionType) {
+    this.state.settings.sessionType = sessionType;
+    this.saveState();
+    return sessionType;
+  }
+  
+  // Get session type
+  getSessionType() {
+    return this.state.settings.sessionType;
+  }
+  
+  // Set Google Sheets URL
+  setGoogleSheetsUrl(url) {
+    this.state.settings.googleSheetsUrl = url;
+    this.saveState();
+    return url;
+  }
+  
+  // Get Google Sheets URL
+  getGoogleSheetsUrl() {
+    return this.state.settings.googleSheetsUrl || GOOGLE_SHEET_WEBAPP_URL || '';
+  }
+  
+  // Sync waiver to Google Sheets
+  async syncWaiverToGoogleSheets(student) {
+    const sheetsUrl = this.getGoogleSheetsUrl();
+    
+    if (!sheetsUrl) {
+      console.log('No Google Sheets URL configured, skipping sync');
+      student.syncPending = true;
+      this.updateStudent(student.id, { syncPending: true });
+      return { success: false, offline: true };
+    }
+    
+    if (!navigator.onLine) {
+      console.log('Offline, queuing waiver for sync');
+      student.syncPending = true;
+      this.updateStudent(student.id, { syncPending: true });
+      this.state.syncQueue.push(student.id);
+      this.saveState();
+      return { success: false, offline: true };
+    }
+    
+    try {
+      const hostLocation = this.getTournamentHostLocation();
+      const hostConfig = CONFIG.schoolWaivers[hostLocation];
+      const sessionType = this.getSessionType();
+      
+      const syncData = {
+        fullName: student.name || `${student.first_name} ${student.last_name}`,
+        email: student.email || '',
+        timestamp: student.waiver_timestamp || new Date().toISOString(),
+        ipAddress: '', // Could be captured client-side if needed
+        signatureData: student.signatureData || '',
+        waiverVersion: hostConfig ? hostConfig.waiverText : '',
+        hostLocation: hostConfig ? hostConfig.name : '',
+        sessionType: sessionType || 'unknown',
+        parentGuardianName: student.parentGuardianName || ''
+      };
+      
+      const response = await fetch(sheetsUrl, {
+        method: 'POST',
+        mode: 'no-cors', // Google Apps Script requires this
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(syncData)
+      });
+      
+      // Note: With no-cors mode, we can't read the response
+      // Assume success if no error thrown
+      this.updateStudent(student.id, { 
+        syncPending: false,
+        syncedAt: new Date().toISOString()
+      });
+      
+      // Remove from sync queue if present
+      this.state.syncQueue = this.state.syncQueue.filter(id => id !== student.id);
+      this.saveState();
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error('Google Sheets sync failed:', error);
+      this.updateStudent(student.id, { syncPending: true });
+      this.state.syncQueue.push(student.id);
+      this.saveState();
+      return { success: false, error: error.message };
+    }
+  }
+  
+  // Retry pending syncs
+  async retryPendingSyncs() {
+    if (!navigator.onLine) {
+      return { success: false, message: 'Still offline' };
+    }
+    
+    const pendingIds = [...this.state.syncQueue];
+    let synced = 0;
+    let failed = 0;
+    
+    for (const studentId of pendingIds) {
+      const student = this.getStudent(studentId);
+      if (student && student.syncPending) {
+        const result = await this.syncWaiverToGoogleSheets(student);
+        if (result.success) {
+          synced++;
+        } else {
+          failed++;
+        }
+      }
+    }
+    
+    return { success: true, synced, failed, total: pendingIds.length };
+  }
+  
+  // Get pending sync count
+  getPendingSyncCount() {
+    return this.state.students.filter(s => s.syncPending === true).length;
+  }
+  
   // Toggle master override
   toggleMasterOverride() {
     this.masterOverride = !this.masterOverride;
@@ -477,103 +611,20 @@ class StateManager {
     return this.masterOverride;
   }
   
-  // Add to sync queue
-  addToSyncQueue(action, data) {
-    if (!this.db) {
-      // Use localStorage for sync queue
-      try {
-        const queue = JSON.parse(localStorage.getItem(this.SYNC_QUEUE_KEY) || '[]');
-        queue.push({
-          action,
-          data,
-          timestamp: Date.now()
-        });
-        localStorage.setItem(this.SYNC_QUEUE_KEY, JSON.stringify(queue));
-      } catch (error) {
-        console.error('Error adding to sync queue:', error);
-      }
-      return;
-    }
-    
-    try {
-      const transaction = this.db.transaction(['sync_queue'], 'readwrite');
-      const store = transaction.objectStore('sync_queue');
-      store.add({
-        action,
-        data,
-        timestamp: Date.now()
-      });
-    } catch (error) {
-      console.error('Error adding to sync queue:', error);
-    }
-  }
-  
   // Setup sync listeners
   setupSyncListeners() {
     // Listen for online/offline events
     window.addEventListener('online', () => {
       this.isOnline = true;
-      this.sync();
+      // Auto-retry pending syncs when coming back online
+      setTimeout(() => {
+        this.retryPendingSyncs();
+      }, 1000);
     });
     
     window.addEventListener('offline', () => {
       this.isOnline = false;
     });
-    
-    // Periodic sync when online
-    if (this.isOnline) {
-      setInterval(() => {
-        if (this.isOnline) {
-          this.sync();
-        }
-      }, CONFIG.sync.syncInterval || 30000);
-    }
-  }
-  
-  // Sync with server
-  async sync() {
-    if (!this.isOnline) return;
-    
-    try {
-      // Get sync queue
-      let queue = [];
-      if (this.db) {
-        const transaction = this.db.transaction(['sync_queue'], 'readonly');
-        const store = transaction.objectStore('sync_queue');
-        const request = store.getAll();
-        request.onsuccess = () => {
-          queue = request.result;
-        };
-      } else {
-        queue = JSON.parse(localStorage.getItem(this.SYNC_QUEUE_KEY) || '[]');
-      }
-      
-      if (queue.length === 0) return;
-      
-      // Send to server (implement your API call here)
-      const response = await fetch(CONFIG.sync.apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ queue })
-      });
-      
-      if (response.ok) {
-        // Clear sync queue on success
-        if (this.db) {
-          const transaction = this.db.transaction(['sync_queue'], 'readwrite');
-          const store = transaction.objectStore('sync_queue');
-          store.clear();
-        } else {
-          localStorage.removeItem(this.SYNC_QUEUE_KEY);
-        }
-        
-        this.state.lastSync = new Date().toISOString();
-        console.log('Sync completed successfully');
-      }
-      
-    } catch (error) {
-      console.error('Sync failed:', error);
-    }
   }
   
   // Get statistics
@@ -582,27 +633,50 @@ class StateManager {
       total: this.state.checkedIn.length,
       pending: this.state.pending.length,
       walkIns: this.state.students.filter(s => s.type === 'walk-in').length,
-      preRegistered: this.state.students.filter(s => s.type === 'pre-registered').length
+      preRegistered: this.state.students.filter(s => s.type === 'pre-registered').length,
+      syncPending: this.getPendingSyncCount()
     };
   }
   
-  // Export data as CSV
+  // Export data as CSV with all legal and operational fields
   exportToCSV() {
-    const headers = ['ID', 'Name', 'Email', 'Phone', 'Rank', 'Location', 'Gender', 'DOB', 'Status', 'Check-In Time'];
-    const rows = this.state.checkedIn.map(s => [
-      s.id,
-      s.name || `${s.first_name} ${s.last_name}`,
+    const sessionType = this.getSessionType();
+    
+    const headers = [
+      'Full Name', 'Email', 'DOB', 'Phone', 
+      sessionType === 'kids' ? 'Age Group' : 'Rank',
+      'Ring Preference', 'School Location', 
+      'Payment Status', 'Payment Method',
+      'Walk-In or Pre-Registered',
+      'Current Group', 'Original Registration Group',
+      'Signature Timestamp', 'Waiver Version', 'Host Location',
+      'Session Type', 'Parent/Guardian Name',
+      'Sync Status', 'IP Address'
+    ];
+    
+    const rows = this.state.students.map(s => [
+      s.name || `${s.first_name || ''} ${s.last_name || ''}`.trim(),
       s.email || '',
-      s.phone || '',
-      s.rank || '',
-      s.location || '',
-      s.gender || '',
       s.dob || '',
-      s.status || '',
-      s.check_in_time || ''
+      s.phone || '',
+      sessionType === 'kids' ? (s.ageGroup || '') : (s.rank || ''),
+      s.ringPreference || '',
+      s.location || '',
+      s.payment_status || 'pending',
+      s.paymentMethod || '',
+      s.type === 'walk-in' ? 'Walk-In' : 'Pre-Registered',
+      s.currentGroup || '',
+      s.originalRegistrationGroup || '',
+      s.waiver_timestamp || '',
+      s.waiverVersion || '',
+      s.waiver_location_name || '',
+      sessionType || '',
+      s.parentGuardianName || '',
+      s.syncPending ? 'Pending' : (s.syncedAt ? 'Synced' : 'Not Synced'),
+      s.ipAddress || ''
     ]);
     
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     return csv;
   }
   
@@ -614,10 +688,14 @@ class StateManager {
       pending: [],
       divisions: {},
       settings: {
-        separateByGender: true,
-        separateByRank: true
+        separateByGender: false,
+        separateByRank: false,
+        tournamentHostLocation: null,
+        sessionType: null,
+        googleSheetsUrl: GOOGLE_SHEET_WEBAPP_URL || ''
       },
-      lastSync: null
+      lastSync: null,
+      syncQueue: []
     };
     
     if (this.db) {

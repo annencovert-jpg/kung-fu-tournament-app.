@@ -1,6 +1,12 @@
 // White-Label Configuration for Tournament Management App
 // Modify this file to customize the app for different schools
 
+// ⚠️ LEGAL COMPLIANCE - REQUIRED BEFORE TOURNAMENT DAY
+// Paste Google Apps Script URL here.
+// Leave empty to use offline mode only.
+// UPDATE THIS EVERY TOURNAMENT YEAR
+const GOOGLE_SHEET_WEBAPP_URL = "";
+
 // ============================================================================
 // MINDBODY PAYMENT URL - SINGLE SOURCE OF TRUTH
 // ============================================================================
@@ -23,22 +29,31 @@ const CONFIG = {
     contactPhone: "(512) 555-1234"
   },
   
+  // Adult session ranks with group mapping
   ranks: [
-    { id: "white", name: "White Belt", color: "#FFFFFF", textColor: "#000000" },
-    { id: "yellow", name: "Yellow Belt", color: "#FFD700", textColor: "#000000" },
-    { id: "green", name: "Green Belt", color: "#32CD32", textColor: "#000000" },
-    { id: "blue", name: "Blue Belt", color: "#1E90FF", textColor: "#FFFFFF" },
-    { id: "brown", name: "Brown Belt", color: "#8B4513", textColor: "#FFFFFF" },
-    { id: "black", name: "Black Belt", color: "#000000", textColor: "#FFD700" },
-    { id: "black-1", name: "1st Degree Black", color: "#000000", textColor: "#FFD700", degree: 1 },
-    { id: "black-2", name: "2nd Degree Black", color: "#000000", textColor: "#FFD700", degree: 2 },
-    { id: "black-3", name: "3rd Degree Black", color: "#000000", textColor: "#FFD700", degree: 3 }
+    { id: "white", name: "White Belt", color: "#FFFFFF", textColor: "#000000", group: 1 },
+    { id: "yellow", name: "Yellow Belt", color: "#FFD700", textColor: "#000000", group: 1 },
+    { id: "blue", name: "Blue Belt", color: "#1E90FF", textColor: "#FFFFFF", group: 2 },
+    { id: "green", name: "Green Belt", color: "#32CD32", textColor: "#000000", group: 2 },
+    { id: "brown", name: "Brown Belt", color: "#8B4513", textColor: "#FFFFFF", group: 3 },
+    { id: "black-1", name: "1st Black", color: "#000000", textColor: "#FFD700", degree: 1, group: 4 },
+    { id: "black-2", name: "2nd-3rd Black", color: "#000000", textColor: "#FFD700", degree: 2, group: 5 }
   ],
   
+  // Kids session age groups with group mapping
+  ageGroups: [
+    { id: "ages-4-6", name: "Ages 4-6", min: 4, max: 6, group: 1 },
+    { id: "ages-7-9", name: "Ages 7-9", min: 7, max: 9, group: 2 },
+    { id: "ages-10-12", name: "Ages 10-12", min: 10, max: 12, group: 3 },
+    { id: "ages-13-17", name: "Ages 13-17", min: 13, max: 17, group: 4 }
+  ],
+  
+  // New gender options with ring preference
   genders: [
     { id: "male", name: "Male", icon: "♂" },
     { id: "female", name: "Female", icon: "♀" },
-    { id: "neutral", name: "Neutral/Other", icon: "⚥" }
+    { id: "non-binary", name: "Non-Binary", icon: "⚥" },
+    { id: "prefer-not-say", name: "Prefer Not to Say", icon: "○" }
   ],
   
   ageBrackets: {
