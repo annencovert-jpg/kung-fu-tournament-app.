@@ -213,23 +213,50 @@ class TournamentApp {
     // Main search
     document.getElementById('main-search-input').addEventListener('input', (e) => this.handleMainSearch(e.target.value));
     
-    // Left panel buttons
+    // Menu dropdown toggle
+    document.getElementById('btn-menu').addEventListener('click', () => this.toggleMenuDropdown());
+    
+    // Menu items
+    document.getElementById('menu-new-session').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.startNewSession();
+    });
+    document.getElementById('menu-import-csv').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.showImportCSVModal();
+    });
+    document.getElementById('menu-division-management').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.showDivisions();
+    });
+    document.getElementById('menu-export-csv').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.exportCSV();
+    });
+    document.getElementById('menu-change-host').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.changeHostLocation();
+    });
+    document.getElementById('menu-settings').addEventListener('click', () => {
+      this.toggleMenuDropdown();
+      this.showSettings();
+    });
+    
+    // Main action buttons
+    document.getElementById('btn-search-preregistered').addEventListener('click', () => {
+      document.getElementById('main-search-input').focus();
+    });
     document.getElementById('btn-walk-in').addEventListener('click', () => this.showWalkInForm());
-    document.getElementById('btn-new-session').addEventListener('click', () => this.startNewSession());
-    document.getElementById('btn-export-csv').addEventListener('click', () => this.exportCSV());
-    document.getElementById('btn-change-host').addEventListener('click', () => this.changeHostLocation());
+    document.getElementById('btn-qr-code').addEventListener('click', () => this.showSelfRegistrationQR());
     
-    // Division controls
-    document.getElementById('btn-view-divisions').addEventListener('click', () => this.showDivisions());
-    document.getElementById('btn-print-lists').addEventListener('click', () => this.printLists());
-    
-    // Add Settings button to left panel
-    const settingsBtn = document.createElement('button');
-    settingsBtn.className = 'btn-secondary btn-large';
-    settingsBtn.id = 'btn-settings';
-    settingsBtn.innerHTML = '⚙️ Settings';
-    settingsBtn.addEventListener('click', () => this.showSettings());
-    document.querySelector('.action-buttons').appendChild(settingsBtn);
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('menu-dropdown');
+      const btnMenu = document.getElementById('btn-menu');
+      if (menu && menu.style.display === 'block' && !menu.contains(e.target) && e.target !== btnMenu) {
+        menu.style.display = 'none';
+      }
+    });
     
     // Modal close buttons
     document.getElementById('close-walk-in').addEventListener('click', () => this.hideWalkInForm());
@@ -1047,6 +1074,176 @@ class TournamentApp {
   }
   
   // ═══════════════════════════════════════════════════════════════════
+  // MENU & QR CODE FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════
+  
+  toggleMenuDropdown() {
+    const menu = document.getElementById('menu-dropdown');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+  
+  showSelfRegistrationQR() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('modal-self-reg-qr');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'modal-self-reg-qr';
+      modal.style.display = 'none';
+      modal.innerHTML = `
+        <div class="modal-content modal-medium">
+          <div class="modal-header">
+            <h2>📱 Self-Registration QR Code</h2>
+            <button class="modal-close" onclick="app.hideSelfRegistrationQR()">&times;</button>
+          </div>
+          <div class="modal-body modal-center">
+            <div id="self-reg-qr-container" class="qr-container"></div>
+            <div id="self-reg-qr-instructions" style="margin-top: 24px;"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    const container = document.getElementById('self-reg-qr-container');
+    container.innerHTML = '';
+    
+    const hostLocation = stateManager.getTournamentHostLocation();
+    const sessionType = stateManager.getSessionType();
+    
+    // Build URL dynamically to work in any environment
+    const waiverUrl = window.location.origin + window.location.pathname.replace('index.html', '') + `waiver.html?location=${hostLocation}&sessionType=${sessionType}`;
+    
+    new QRCode(container, {
+      text: waiverUrl,
+      width: 350,
+      height: 350,
+      colorDark: '#000000',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    const sessionLabel = sessionType === 'kids' ? 'Kids' : 'Adult';
+    const hostConfig = CONFIG.schoolWaivers[hostLocation];
+    
+    document.getElementById('self-reg-qr-instructions').innerHTML = `
+      <h3 style="font-size: 24px; color: var(--color-secondary); margin-bottom: 16px;">${sessionLabel} Session Registration</h3>
+      <p style="font-size: 18px; margin-bottom: 12px;">Students can scan this QR code with their phone to:</p>
+      <ul style="text-align: left; display: inline-block; font-size: 16px; line-height: 1.8;">
+        <li>Fill out registration form</li>
+        <li>Sign waiver for ${hostConfig ? hostConfig.name : 'tournament'}</li>
+        <li>Submit to pending queue</li>
+      </ul>
+      <p style="font-size: 14px; opacity: 0.7; margin-top: 16px;">QR code opens registration page on their phone browser</p>
+    `;
+    
+    modal.style.display = 'flex';
+  }
+  
+  hideSelfRegistrationQR() {
+    document.getElementById('modal-self-reg-qr').style.display = 'none';
+  }
+  
+  showImportCSVModal() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('modal-import-csv');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'modal-import-csv';
+      modal.style.display = 'none';
+      modal.innerHTML = `
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h2>📥 Import CSV from Mindbody</h2>
+            <button class="modal-close" onclick="app.hideImportCSVModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid var(--color-secondary); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+              <h3 style="color: var(--color-secondary); margin-bottom: 12px;">Instructions</h3>
+              <ol style="line-height: 1.8; padding-left: 20px;">
+                <li>Export student roster from Mindbody as CSV</li>
+                <li>Click "Choose File" below and select the CSV file</li>
+                <li>Click "Import" to add students to the Pending Verification Queue</li>
+                <li>All imported students will appear in the right panel for verification</li>
+              </ol>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: var(--color-secondary); font-weight: bold; margin-bottom: 8px;">Select CSV File</label>
+              <input type="file" id="csv-file-input" accept=".csv" class="input-large" style="padding: 12px;">
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <button class="btn-secondary" onclick="app.hideImportCSVModal()">Cancel</button>
+              <button class="btn-primary" onclick="app.processCSVImport()" style="flex: 1;">📥 Import Students</button>
+            </div>
+            <div id="import-result" style="margin-top: 16px;"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    // Reset file input
+    const fileInput = document.getElementById('csv-file-input');
+    if (fileInput) fileInput.value = '';
+    
+    document.getElementById('import-result').innerHTML = '';
+    modal.style.display = 'flex';
+  }
+  
+  hideImportCSVModal() {
+    document.getElementById('modal-import-csv').style.display = 'none';
+  }
+  
+  async processCSVImport() {
+    const fileInput = document.getElementById('csv-file-input');
+    const resultDiv = document.getElementById('import-result');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+      resultDiv.innerHTML = '<p style="color: #FF0000;">Please select a CSV file first.</p>';
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const csvText = e.target.result;
+      const result = stateManager.importFromCSV(csvText);
+      
+      if (result.imported > 0) {
+        resultDiv.innerHTML = `
+          <div style="background: #32CD32; color: #000; padding: 16px; border-radius: 8px; font-weight: bold;">
+            ✅ Imported ${result.imported} students successfully.<br>
+            They appear in the Pending Verification Queue.
+          </div>
+        `;
+        
+        // Update UI
+        this.updateStats();
+        this.renderPendingQueue();
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          this.hideImportCSVModal();
+        }, 2000);
+      } else {
+        resultDiv.innerHTML = `
+          <div style="background: rgba(255, 165, 0, 0.2); border: 2px solid #FFA500; padding: 16px; border-radius: 8px;">
+            ⚠️ No new students imported. ${result.total} students already exist in the system.
+          </div>
+        `;
+      }
+    };
+    
+    reader.onerror = () => {
+      resultDiv.innerHTML = '<p style="color: #FF0000;">Error reading file. Please try again.</p>';
+    };
+    
+    reader.readAsText(file);
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
   // NEW SESSION BUTTON
   // ═══════════════════════════════════════════════════════════════════
   
@@ -1111,6 +1308,9 @@ class TournamentApp {
         ` : ''}
       </div>
       <div id="groups-container"></div>
+      <div style="margin-top: 24px; text-align: center;">
+        <button class="btn-primary btn-large" onclick="app.printLists()">🖨️ Print Ring Lists</button>
+      </div>
     `;
     
     // Add event listeners for checkboxes
@@ -1401,7 +1601,10 @@ class TournamentApp {
     
     content.innerHTML = `
       <div style="margin-bottom: 32px;">
-        <h3 style="color: var(--color-secondary); margin-bottom: 16px;">Google Sheets Integration</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="color: var(--color-secondary); margin: 0;">Google Sheets Integration</h3>
+          <button class="btn-secondary" onclick="app.showGoogleSheetsSetupGuide()" style="padding: 8px 16px; font-size: 14px;">❓ How to set this up</button>
+        </div>
         <p style="margin-bottom: 12px;">Paste your Google Apps Script Web App URL below. This is required for legal compliance (Texas UETA).</p>
         <input type="text" id="google-sheets-url-input" class="input-large" placeholder="https://script.google.com/..." value="${currentUrl}" style="margin-bottom: 12px;">
         <div style="display: flex; gap: 12px;">
@@ -1507,6 +1710,163 @@ class TournamentApp {
       alert('No records were synced. Check your connection and try again.');
     }
     this.showSettings(); // Refresh
+  }
+  
+  showGoogleSheetsSetupGuide() {
+    const scriptCode = `function doPost(e) {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName("Sheet1");
+  const data = JSON.parse(e.postData.contents);
+  sheet.appendRow([
+    data.fullName,
+    data.email,
+    data.timestamp,
+    data.ipAddress,
+    data.signatureData,
+    data.waiverVersion,
+    data.hostLocation,
+    data.sessionType,
+    data.parentGuardianName || ""
+  ]);
+  return ContentService
+    .createTextOutput(
+      JSON.stringify({"result":"success"})
+    )
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    const content = document.getElementById('settings-content');
+    content.innerHTML = `
+      <button class="btn-secondary" onclick="app.showSettings()" style="margin-bottom: 16px;">← Back to Settings</button>
+      
+      <div style="max-height: 600px; overflow-y: auto; padding-right: 12px;">
+        <h2 style="color: var(--color-secondary); margin-bottom: 12px; font-size: 28px;">Google Sheets Setup Guide</h2>
+        <p style="font-size: 16px; margin-bottom: 24px; opacity: 0.9;">Follow these steps to connect your Tournament Waiver records to Google Sheets. This is required for legal compliance in Texas.</p>
+        
+        <hr style="border: none; border-top: 2px solid var(--color-secondary); margin: 24px 0;">
+        
+        <h3 style="color: var(--color-secondary); font-size: 22px; margin: 24px 0 16px 0;">PHASE 1 — CREATE YOUR GOOGLE SHEET</h3>
+        <ol style="line-height: 2; font-size: 15px; padding-left: 24px;">
+          <li>Go to <strong>sheets.google.com</strong> and sign in</li>
+          <li>Click the <strong>+ button</strong> to create a new blank spreadsheet</li>
+          <li>Name it: <strong style="color: var(--color-secondary);">Tournament Waivers 2026</strong> (update the year each tournament)</li>
+          <li>In <strong>Row 1</strong> add these column headers exactly as shown, one per column:
+            <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid var(--color-secondary); padding: 16px; margin: 12px 0; border-radius: 8px;">
+              <div style="font-family: monospace; font-size: 14px; line-height: 1.8;">
+                <strong>Column A:</strong> Full Name<br>
+                <strong>Column B:</strong> Email<br>
+                <strong>Column C:</strong> Timestamp<br>
+                <strong>Column D:</strong> IP Address<br>
+                <strong>Column E:</strong> Signature Data<br>
+                <strong>Column F:</strong> Waiver Version<br>
+                <strong>Column G:</strong> Host Location<br>
+                <strong>Column H:</strong> Session Type<br>
+                <strong>Column I:</strong> Parent Guardian Name
+              </div>
+            </div>
+            <strong style="color: #FFA500;">IMPORTANT:</strong> The columns must be in this exact order or the data will not save correctly.
+          </li>
+        </ol>
+        
+        <hr style="border: none; border-top: 2px solid var(--color-secondary); margin: 24px 0;">
+        
+        <h3 style="color: var(--color-secondary); font-size: 22px; margin: 24px 0 16px 0;">PHASE 2 — ADD THE SCRIPT</h3>
+        <ol style="line-height: 2; font-size: 15px; padding-left: 24px;">
+          <li>In your Google Sheet click <strong>Extensions</strong> in the top menu bar</li>
+          <li>Click <strong>Apps Script</strong></li>
+          <li>A new tab opens with a code editor</li>
+          <li>Select all existing code and delete it</li>
+          <li>Paste the following script exactly:
+            <div style="margin: 12px 0;">
+              <button class="btn-primary" onclick="app.copyScriptToClipboard()" style="padding: 12px 24px; font-size: 16px;">📋 Copy Script</button>
+            </div>
+            <div style="background: #1a1a1a; border: 2px solid var(--color-secondary); padding: 16px; margin: 12px 0; border-radius: 8px; overflow-x: auto;">
+              <pre style="color: #FFD700; font-family: monospace; font-size: 13px; margin: 0; white-space: pre-wrap;">${scriptCode}</pre>
+            </div>
+          </li>
+          <li>Click the <strong>floppy disk icon</strong> to Save</li>
+          <li>Name the project: <strong style="color: var(--color-secondary);">Tournament Waiver Sync</strong></li>
+          <li>Click <strong>OK</strong></li>
+        </ol>
+        
+        <hr style="border: none; border-top: 2px solid var(--color-secondary); margin: 24px 0;">
+        
+        <h3 style="color: var(--color-secondary); font-size: 22px; margin: 24px 0 16px 0;">PHASE 3 — DEPLOY THE SCRIPT</h3>
+        <ol style="line-height: 2; font-size: 15px; padding-left: 24px;">
+          <li>Click the <strong>Deploy</strong> button (top right)</li>
+          <li>Click <strong>New Deployment</strong></li>
+          <li>Click the <strong>gear icon</strong> next to Select Type</li>
+          <li>Choose <strong>Web App</strong></li>
+          <li>Fill in these settings exactly:
+            <ul style="margin: 8px 0; padding-left: 24px;">
+              <li><strong>Description:</strong> Tournament Waiver Sync</li>
+              <li><strong>Execute As:</strong> Me</li>
+              <li><strong>Who Has Access:</strong> Anyone</li>
+            </ul>
+          </li>
+          <li>Click <strong>Deploy</strong></li>
+          <li>Click <strong>Authorize Access</strong> if prompted and follow the login steps</li>
+          <li>After deploying you will see a URL that starts with <strong style="color: var(--color-secondary);">https://script.google.com</strong></li>
+          <li>Copy that entire URL</li>
+        </ol>
+        
+        <hr style="border: none; border-top: 2px solid var(--color-secondary); margin: 24px 0;">
+        
+        <h3 style="color: var(--color-secondary); font-size: 22px; margin: 24px 0 16px 0;">PHASE 4 — CONNECT TO THIS APP</h3>
+        <ol style="line-height: 2; font-size: 15px; padding-left: 24px;">
+          <li>Come back to this tournament app</li>
+          <li>Open Settings from the menu</li>
+          <li>Paste the URL you copied into the Google Sheets URL field</li>
+          <li>Click <strong>Save</strong></li>
+          <li>Click <strong>Test Connection</strong></li>
+          <li>You should see: <strong style="color: #32CD32;">✅ Connected! Legal records will sync automatically.</strong></li>
+        </ol>
+        <div style="background: rgba(255, 165, 0, 0.1); border: 2px solid #FFA500; padding: 16px; margin: 16px 0; border-radius: 8px;">
+          <p style="margin: 0;"><strong>⚠️ If the test fails:</strong> Double check that you set <strong>Who Has Access</strong> to <strong>Anyone</strong> in Phase 3.</p>
+        </div>
+        
+        <hr style="border: none; border-top: 2px solid var(--color-secondary); margin: 24px 0;">
+        
+        <h3 style="color: var(--color-secondary); font-size: 22px; margin: 24px 0 16px 0;">NEED HELP?</h3>
+        <p style="font-size: 15px; line-height: 1.8;">Contact your app administrator for assistance with this setup. This only needs to be done once per tournament year.</p>
+        
+        <div style="margin-top: 32px; text-align: center;">
+          <button class="btn-secondary btn-large" onclick="window.print()" style="display: inline-block;">🖨️ Print Instructions</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  copyScriptToClipboard() {
+    const scriptCode = `function doPost(e) {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName("Sheet1");
+  const data = JSON.parse(e.postData.contents);
+  sheet.appendRow([
+    data.fullName,
+    data.email,
+    data.timestamp,
+    data.ipAddress,
+    data.signatureData,
+    data.waiverVersion,
+    data.hostLocation,
+    data.sessionType,
+    data.parentGuardianName || ""
+  ]);
+  return ContentService
+    .createTextOutput(
+      JSON.stringify({"result":"success"})
+    )
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+    
+    navigator.clipboard.writeText(scriptCode).then(() => {
+      this.showSuccessMessage('📋 Script copied to clipboard!');
+    }).catch(() => {
+      alert('Failed to copy. Please manually copy the script from the setup guide.');
+    });
   }
   
   // ═══════════════════════════════════════════════════════════════════

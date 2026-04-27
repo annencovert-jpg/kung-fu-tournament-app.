@@ -763,6 +763,82 @@ body {
   }
 }
 
+/* Menu Dropdown */
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-primary);
+  border: 3px solid var(--color-secondary);
+  border-radius: 8px;
+  margin-top: 8px;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+.menu-item {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-medium);
+  font-weight: bold;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  border: none;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: block;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background: var(--color-secondary);
+  color: var(--color-text-inverse);
+  transform: translateX(8px);
+}
+
+/* Button Grid - Fixed Styling for Visibility */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.gender-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-button {
+  padding: var(--spacing-md);
+  font-size: var(--font-medium);
+  font-weight: bold;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #1a1a1a;
+  color: #FFD700;
+  text-align: center;
+}
+
+.grid-button:hover {
+  transform: scale(1.05);
+  border-color: #FFA500;
+}
+
+.grid-button.selected {
+  background: #FFD700 !important;
+  color: #000000 !important;
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+  transform: scale(1.05);
+}
+
 /* Utility Classes */
 .hidden {
   display: none !important;

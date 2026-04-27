@@ -29,29 +29,31 @@
     
     <!-- Left Panel: Actions -->
     <aside class="left-panel">
+      <!-- Menu Dropdown Button -->
+      <div style="position: relative; margin-bottom: 24px;">
+        <button class="btn-secondary btn-large" id="btn-menu" style="width: 100%;">
+          ☰ Menu
+        </button>
+        <div id="menu-dropdown" class="menu-dropdown" style="display: none;">
+          <button class="menu-item" id="menu-new-session">🔄 New Session</button>
+          <button class="menu-item" id="menu-import-csv">📥 Import CSV from Mindbody</button>
+          <button class="menu-item" id="menu-division-management">📊 Division Management</button>
+          <button class="menu-item" id="menu-export-csv">📥 Export Check-In Data</button>
+          <button class="menu-item" id="menu-change-host">🏫 Change Host Location</button>
+          <button class="menu-item" id="menu-settings">⚙️ Settings</button>
+        </div>
+      </div>
+
+      <!-- Main Action Buttons (Always Visible) -->
       <div class="action-buttons">
+        <button class="btn-primary btn-large" id="btn-search-preregistered">
+          🔍 Search Pre-Registered
+        </button>
         <button class="btn-primary btn-large" id="btn-walk-in">
           ➕ New Walk-In Student
         </button>
-        <button class="btn-secondary btn-large" id="btn-new-session">
-          🔄 New Session
-        </button>
-        <button class="btn-secondary btn-large" id="btn-export-csv">
-          � Export Check-In Data
-        </button>
-        <button class="btn-secondary btn-large" id="btn-change-host">
-          🏫 Change Host Location
-        </button>
-      </div>
-
-      <!-- Division Controls -->
-      <div class="division-controls">
-        <h3>Division Management</h3>
-        <button class="btn-secondary" id="btn-view-divisions">
-          📊 View Division Summary
-        </button>
-        <button class="btn-secondary" id="btn-print-lists">
-          🖨️ Print Ring Lists
+        <button class="btn-primary btn-large" id="btn-qr-code">
+          📱 Show Self-Registration QR
         </button>
       </div>
     </aside>
