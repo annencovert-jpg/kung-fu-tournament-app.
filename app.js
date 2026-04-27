@@ -190,7 +190,7 @@ class TournamentApp {
       <div style="display: flex; align-items: center;">
         ${logoHTML}
         <div>
-          <h1 id="school-name" style="margin: 0;"><span class="font-bold">Kung Fu and Tai Chi</span> <span class="font-light">Tournament Manager</span></h1>
+          <h1 id="school-name" style="margin: 0;"><span class="font-light">Tournament Manager</span></h1>
           <div style="font-size: 18px; color: #FFA500; margin-top: 4px;">
             ${locationLabel}${sessionLabel ? ' | ' + sessionLabel : ''}
           </div>
@@ -663,18 +663,21 @@ class TournamentApp {
   // 5-STEP VERIFICATION MODAL WITH PAYMENT CONTROLS
   // ═══════════════════════════════════════════════════════════════════
   
-  show5StepVerificationModal(student) {
+  show7StepVerificationModal(student) {
     const modal = document.getElementById('modal-verify');
     const content = document.getElementById('verify-content');
     const sessionType = stateManager.getSessionType();
     
     const hasWaiver = student.waiver_signed === true || student.signatureData;
     const hasPayment = student.payment_status === 'paid';
+    const hasDataEntry = sessionType === 'adult' ? !!student.rank : !!student.ageGroup;
     
     const waiverIcon = hasWaiver ? '✅' : '❌';
     const paymentIcon = hasPayment ? '✅' : '❌';
+    const dataEntryIcon = hasDataEntry ? '✅' : '❌';
     const waiverColor = hasWaiver ? '#32CD32' : '#FF0000';
     const paymentColor = hasPayment ? '#32CD32' : '#FF0000';
+    const dataEntryColor = hasDataEntry ? '#32CD32' : '#FF0000';
     
     const age = student.dob ? stateManager.calculateAge(student.dob) : 'Unknown';
     const displayInfo = sessionType === 'kids'
@@ -695,6 +698,26 @@ class TournamentApp {
         <button class="btn-primary" style="flex: 1; min-width: 150px; padding: 8px 12px; font-size: 14px;" onclick="app.markCashPayment('${student.id}')">💵 Cash Payment Received</button>
       </div>
     `;
+    
+    // Data entry buttons HTML
+    let dataEntryHTML = '';
+    if (sessionType === 'adult') {
+      dataEntryHTML = CONFIG.ranks.map(rank => `
+        <button class="grid-button rank-button ${student.rank === rank.id ? 'selected' : ''}" 
+          style="background-color: ${rank.color}; color: #FFFFFF; font-weight: 800; text-shadow: 2px 2px 0px #000000, -1px -1px 0px #000000, 1px -1px 0px #000000, -1px 1px 0px #000000; padding: 20px; font-size: 18px; border: 3px solid ${student.rank === rank.id ? '#FFD700' : 'var(--color-secondary)'}; ${student.rank === rank.id ? 'box-shadow: 0 0 15px #FFD700;' : ''}" 
+          onclick="app.selectVerifyRank('${student.id}', '${rank.id}', ${rank.group})">
+          ${rank.name}
+        </button>
+      `).join('');
+    } else {
+      dataEntryHTML = CONFIG.ageGroups.map(ageGroup => `
+        <button class="grid-button age-button ${student.ageGroup === ageGroup.id ? 'selected' : ''}" 
+          style="background-color: var(--color-secondary); color: #FFFFFF; font-weight: 800; text-shadow: 2px 2px 0px #000000, -1px -1px 0px #000000, 1px -1px 0px #000000, -1px 1px 0px #000000; padding: 20px; font-size: 18px; border: 3px solid ${student.ageGroup === ageGroup.id ? '#FFD700' : 'var(--color-secondary)'}; ${student.ageGroup === ageGroup.id ? 'box-shadow: 0 0 15px #FFD700;' : ''}" 
+          onclick="app.selectVerifyAgeGroup('${student.id}', '${ageGroup.id}', ${ageGroup.group})">
+          ${ageGroup.name}
+        </button>
+      `).join('');
+    }
     
     content.innerHTML = `
       <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--color-secondary); border-radius: 12px; padding: 24px; margin-bottom: 16px; text-align: center;">
@@ -743,11 +766,26 @@ class TournamentApp {
         ${paymentControlsHTML}
       </div>
       
-      <!-- STEP 5 - CHECK IN -->
+      <!-- STEP 5 - DATA ENTRY -->
+      <div style="background: rgba(255, 215, 0, 0.05); border: 2px solid ${dataEntryColor}; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+          <span style="font-size: 42px;">${dataEntryIcon}</span>
+          <div style="flex: 1;">
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 5 - DATA ENTRY</p>
+            <strong style="font-size: 20px;">${sessionType === 'adult' ? 'Select Rank' : 'Select Age Group'}</strong>
+            <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasDataEntry ? 'Selection confirmed' : 'Please select an option'}</p>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px;">
+          ${dataEntryHTML}
+        </div>
+      </div>
+      
+      <!-- STEP 6 - CHECK IN -->
       <div style="text-align: center; margin-top: 24px;">
-        <p style="font-size: 14px; opacity: 0.7; margin-bottom: 8px;">STEP 5 - CHECK IN</p>
-        <button class="btn-checkin ${hasWaiver && hasPayment ? 'enabled' : 'disabled'}" id="btn-final-checkin" ${hasWaiver && hasPayment ? '' : 'disabled'} onclick="app.finalCheckIn('${student.id}')">
-          ✓ CHECK IN STUDENT
+        <p style="font-size: 14px; opacity: 0.7; margin-bottom: 8px;">STEP 6 - CHECK IN</p>
+        <button class="btn-checkin ${hasWaiver && hasPayment && hasDataEntry ? 'enabled' : 'disabled'}" id="btn-final-checkin" ${hasWaiver && hasPayment && hasDataEntry ? '' : 'disabled'} onclick="app.finalCheckIn('${student.id}')">
+          ✓ CONFIRM CHECK-IN
         </button>
       </div>
       
@@ -757,6 +795,31 @@ class TournamentApp {
     `;
     
     modal.style.display = 'flex';
+  }
+  
+  // Alias for backward compatibility
+  show5StepVerificationModal(student) {
+    this.show7StepVerificationModal(student);
+  }
+  
+  selectVerifyRank(studentId, rankId, group) {
+    stateManager.updateStudent(studentId, {
+      rank: rankId,
+      originalRegistrationGroup: group,
+      currentGroup: group
+    });
+    const student = stateManager.getStudent(studentId);
+    this.show7StepVerificationModal(student);
+  }
+  
+  selectVerifyAgeGroup(studentId, ageGroupId, group) {
+    stateManager.updateStudent(studentId, {
+      ageGroup: ageGroupId,
+      originalRegistrationGroup: group,
+      currentGroup: group
+    });
+    const student = stateManager.getStudent(studentId);
+    this.show7StepVerificationModal(student);
   }
   
   markPaymentUnpaid(studentId) {
@@ -1008,7 +1071,7 @@ class TournamentApp {
     
     if (result.success) {
       this.hideVerifyModal();
-      this.showCheckInSuccess(result.student);
+      this.showCheckInSuccessWithArmbandReminder(result.student);
       this.updateStats();
       this.renderPendingQueue();
       
@@ -1016,6 +1079,50 @@ class TournamentApp {
       document.getElementById('search-results').innerHTML = '';
     } else {
       alert('Unable to check in: ' + result.error);
+    }
+  }
+  
+  showCheckInSuccessWithArmbandReminder(student) {
+    // STEP 7 - ARMBAND REMINDER
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9); display: flex; align-items: center;
+      justify-content: center; z-index: 5000; animation: fadeIn 0.3s ease-out;
+    `;
+    overlay.id = 'armband-reminder-overlay';
+    
+    const reminderBox = document.createElement('div');
+    reminderBox.style.cssText = `
+      background: #FFD700; color: #000; padding: 48px; border-radius: 24px;
+      text-align: center; max-width: 600px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); animation: scaleIn 0.3s ease-out;
+    `;
+    reminderBox.innerHTML = `
+      <div style="font-size: 96px; margin-bottom: 24px;">✅</div>
+      <h2 style="font-size: 36px; margin-bottom: 16px; font-weight: bold;">CHECKED IN!</h2>
+      <div style="font-size: 28px; margin-bottom: 32px;">${student.name || `${student.first_name} ${student.last_name}`}</div>
+      
+      <div style="background: rgba(255, 0, 0, 0.1); border: 4px solid #FF0000; border-radius: 16px; padding: 32px; margin: 32px 0;">
+        <div style="font-size: 72px; margin-bottom: 16px;">🏷️</div>
+        <h3 style="font-size: 32px; margin-bottom: 12px; font-weight: bold; color: #FF0000;">STEP 7 - ARMBAND REMINDER</h3>
+        <p style="font-size: 24px; font-weight: bold; line-height: 1.4;">REQUIRED: Give student their armband now.</p>
+      </div>
+      
+      <button class="btn-primary" onclick="app.closeArmbandReminder()" style="padding: 20px 48px; font-size: 24px; font-weight: bold; background: #000; color: #FFD700; border: 3px solid #000; cursor: pointer; border-radius: 12px; margin-top: 16px;">
+        ✓ Finish
+      </button>
+    `;
+    
+    overlay.appendChild(reminderBox);
+    document.body.appendChild(overlay);
+  }
+  
+  closeArmbandReminder() {
+    const overlay = document.getElementById('armband-reminder-overlay');
+    if (overlay) {
+      overlay.style.animation = 'fadeOut 0.3s ease-in';
+      setTimeout(() => overlay.remove(), 300);
     }
   }
   
@@ -1255,11 +1362,22 @@ class TournamentApp {
     }
     
     if (confirm('This will start a completely new session. All current data will be cleared.\n\nAre you sure?')) {
-      // Clear all data
+      // Preserve hostLocation before clearing data
+      const hostLocation = stateManager.getTournamentHostLocation();
+      
+      // Clear all data except host location
       stateManager.clearAllData();
       
-      // Restart the setup flow
+      // Restore hostLocation
+      if (hostLocation) {
+        stateManager.setTournamentHostLocation(hostLocation);
+      }
+      
+      // Restart the setup flow with session type selection
       this.showSessionTypeSelection();
+      
+      // Update header to ensure logo remains visible
+      this.loadHeaderWithLogoAndSession();
     }
   }
   
