@@ -392,6 +392,11 @@ class TournamentApp {
     if (!locationGrid) return;
     
     locationGrid.innerHTML = '';
+    
+    // Set grid columns based on number of locations
+    const numLocations = CONFIG.school.locations.length;
+    locationGrid.style.gridTemplateColumns = numLocations <= 3 ? `repeat(${numLocations}, 1fr)` : 'repeat(auto-fit, minmax(140px, 1fr))';
+    
     CONFIG.school.locations.forEach(location => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -408,6 +413,11 @@ class TournamentApp {
     if (!genderGrid) return;
     
     genderGrid.innerHTML = '';
+    
+    // Set grid columns to always be 2 for gender (typically Male/Female or 4 options)
+    const numGenders = CONFIG.genders.length;
+    genderGrid.style.gridTemplateColumns = numGenders === 2 ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(140px, 1fr))';
+    
     CONFIG.genders.forEach(gender => {
       const btn = document.createElement('button');
       btn.type = 'button';
