@@ -14,6 +14,20 @@ class TournamentApp {
   }
   
   init() {
+    // Menu dropdown toggle and close on outside click
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('menu-dropdown');
+      const btn = document.getElementById('btn-menu');
+      if (!menu || !btn) return;
+      if (btn.contains(e.target)) {
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        return;
+      }
+      if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+    
     // Check startup flow: host location -> session type -> dashboard
     if (!stateManager.getTournamentHostLocation()) {
       this.showHostLocationStartup();
@@ -212,20 +226,6 @@ class TournamentApp {
   setupEventListeners() {
     // Main search
     document.getElementById('main-search-input').addEventListener('input', (e) => this.handleMainSearch(e.target.value));
-    
-    // Menu dropdown toggle and close on outside click
-    document.addEventListener('click', (e) => {
-      const menu = document.getElementById('menu-dropdown');
-      const btn = document.getElementById('btn-menu');
-      if (!menu || !btn) return;
-      if (btn.contains(e.target)) {
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        return;
-      }
-      if (!menu.contains(e.target)) {
-        menu.style.display = 'none';
-      }
-    });
     
     // Menu items
     document.getElementById('menu-new-session').addEventListener('click', () => {
