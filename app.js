@@ -213,8 +213,12 @@ class TournamentApp {
     // Main search
     document.getElementById('main-search-input').addEventListener('input', (e) => this.handleMainSearch(e.target.value));
     
-    // Menu dropdown toggle
-    document.getElementById('btn-menu').addEventListener('click', () => this.toggleMenuDropdown());
+    // Menu dropdown toggle using Global Event Delegation
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'btn-menu' || e.target.closest('#btn-menu')) {
+        this.toggleMenuDropdown();
+      }
+    });
     
     // Menu items
     document.getElementById('menu-new-session').addEventListener('click', () => {
@@ -1479,7 +1483,7 @@ class TournamentApp {
     
     const groupNumbers = Object.keys(groups).sort((a, b) => parseInt(a) - parseInt(b));
     
-    container.innerHTML = groupNumbers.map(groupNum => {
+    const groupsHTML = groupNumbers.map(groupNum => {
       const students = groups[groupNum];
       const groupLabel = this.getGroupLabel(parseInt(groupNum), sessionType);
       
@@ -1514,6 +1518,8 @@ class TournamentApp {
         </div>
       `;
     }).join('');
+    
+    container.innerHTML = `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">${groupsHTML}</div>`;
     
     // Setup drag and drop
     this.setupDragAndDrop();

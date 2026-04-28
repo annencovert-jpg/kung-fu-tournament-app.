@@ -137,7 +137,7 @@
           </div>
           <div class="form-group">
             <label>Date of Birth *</label>
-            <input type="date" id="walkin-dob" class="input-large" required>
+            <input type="text" id="walkin-dob" class="input-large" placeholder="MM/DD/YYYY" required>
           </div>
           <div class="form-group">
             <label>Email</label>
@@ -149,18 +149,21 @@
           </div>
           <div class="form-group">
             <label>Rank *</label>
-            <div class="button-grid" id="rank-grid"></div>
-            <input type="hidden" id="walkin-rank" required>
+            <select id="rank-grid" class="input-large" required>
+              <option value="">Select Rank</option>
+            </select>
           </div>
           <div class="form-group">
             <label>School Location *</label>
-            <div class="button-grid" id="location-grid"></div>
-            <input type="hidden" id="walkin-location" required>
+            <select id="location-grid" class="input-large" required>
+              <option value="">Select Location</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Gender *</label>
-            <div class="button-grid gender-grid" id="gender-grid"></div>
-            <input type="hidden" id="walkin-gender" required>
+            <select id="gender-grid" class="input-large" required>
+              <option value="">Select Gender</option>
+            </select>
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary btn-large">✓ Add Student</button>
