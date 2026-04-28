@@ -174,6 +174,7 @@ class TournamentApp {
     stateManager.setSessionType(sessionType);
     document.getElementById('modal-host-selection').style.display = 'none';
     this.initDashboard();
+    this.loadHeaderWithLogoAndSession();
     this.showSuccessMessage(`${sessionType === 'adult' ? 'Adult' : 'Kids'} Session started!`);
   }
   
@@ -1372,7 +1373,6 @@ class TournamentApp {
     if (confirm('Start a new session? All current check-in data will be cleared.')) {
       stateManager.clearAllData();
       this.showSessionTypeSelection();
-      this.loadHeaderWithLogoAndSession();
     }
   }
   
