@@ -213,10 +213,17 @@ class TournamentApp {
     // Main search
     document.getElementById('main-search-input').addEventListener('input', (e) => this.handleMainSearch(e.target.value));
     
-    // Menu dropdown toggle using Global Event Delegation
+    // Menu dropdown toggle and close on outside click
     document.addEventListener('click', (e) => {
-      if (e.target.id === 'btn-menu' || e.target.closest('#btn-menu')) {
-        this.toggleMenuDropdown();
+      const menu = document.getElementById('menu-dropdown');
+      const btn = document.getElementById('btn-menu');
+      if (!menu || !btn) return;
+      if (btn.contains(e.target)) {
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        return;
+      }
+      if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
       }
     });
     
@@ -252,15 +259,6 @@ class TournamentApp {
     });
     document.getElementById('btn-walk-in').addEventListener('click', () => this.showWalkInForm());
     document.getElementById('btn-qr-code').addEventListener('click', () => this.showSelfRegistrationQR());
-    
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-      const menu = document.getElementById('menu-dropdown');
-      const btnMenu = document.getElementById('btn-menu');
-      if (menu && menu.style.display === 'block' && !menu.contains(e.target) && e.target !== btnMenu) {
-        menu.style.display = 'none';
-      }
-    });
     
     // Modal close buttons
     document.getElementById('close-walk-in').addEventListener('click', () => this.hideWalkInForm());
