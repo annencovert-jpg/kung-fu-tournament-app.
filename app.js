@@ -1372,6 +1372,7 @@ class TournamentApp {
     if (confirm('Start a new session? All current check-in data will be cleared.')) {
       stateManager.clearAllData();
       this.showSessionTypeSelection();
+      this.loadHeaderWithLogoAndSession();
     }
   }
   
