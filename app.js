@@ -143,6 +143,9 @@ class TournamentApp {
           <span style="font-size: 28px; font-weight: bold;">Kids Session</span>
           <span style="font-size: 16px; opacity: 0.8;">Age-based divisions</span>
         </button>
+        <div style="text-align: center; margin-top: 32px;">
+          <button class="btn-secondary" style="font-size: 16px; padding: 12px 32px;" onclick="app.changeHostLocation()">← Switch School</button>
+        </div>
       </div>
     `;
     
@@ -175,11 +178,10 @@ class TournamentApp {
   }
   
   changeHostLocation() {
-    const pin = prompt('Enter PIN to change host location:');
-    if (pin === this.PIN_CODE) {
+    if (confirm('Switch to a different host school? All current data will be cleared.')) {
+      stateManager.clearAllData();
+      stateManager.setTournamentHostLocation(null);
       this.showHostLocationStartup();
-    } else if (pin !== null) {
-      alert('Incorrect PIN');
     }
   }
   
@@ -1367,29 +1369,9 @@ class TournamentApp {
   // ═══════════════════════════════════════════════════════════════════
   
   startNewSession() {
-    const pin = prompt('Enter PIN to start new session:');
-    if (pin !== this.PIN_CODE) {
-      if (pin !== null) alert('Incorrect PIN');
-      return;
-    }
-    
-    if (confirm('This will start a completely new session. All current data will be cleared.\n\nAre you sure?')) {
-      // Preserve hostLocation before clearing data
-      const hostLocation = stateManager.getTournamentHostLocation();
-      
-      // Clear all data except host location
+    if (confirm('Start a new session? All current check-in data will be cleared.')) {
       stateManager.clearAllData();
-      
-      // Restore hostLocation
-      if (hostLocation) {
-        stateManager.setTournamentHostLocation(hostLocation);
-      }
-      
-      // Restart the setup flow with session type selection
       this.showSessionTypeSelection();
-      
-      // Update header to ensure logo remains visible
-      this.loadHeaderWithLogoAndSession();
     }
   }
   
