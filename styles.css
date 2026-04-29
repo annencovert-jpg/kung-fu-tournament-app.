@@ -672,9 +672,8 @@ body {
 
 /* Division Grid */
 .divisions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
 }
 
 .division-card {
