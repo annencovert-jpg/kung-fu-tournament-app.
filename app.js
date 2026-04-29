@@ -631,7 +631,7 @@ class TournamentApp {
     
     this.hideWalkInForm();
     this.showSuccessMessage(`Walk-in student ${formData.name} added!`);
-    this.show5StepVerificationModal(student);
+    this.showVerificationFlow(student);
   }
   
   // ═══════════════════════════════════════════════════════════════════
@@ -671,14 +671,14 @@ class TournamentApp {
     if (!student) return;
     
     this.currentStudent = student;
-    this.show5StepVerificationModal(student);
+    this.showVerificationFlow(student);
   }
   
   // ═══════════════════════════════════════════════════════════════════
   // 5-STEP VERIFICATION MODAL WITH PAYMENT CONTROLS
   // ═══════════════════════════════════════════════════════════════════
   
-  show7StepVerificationModal(student) {
+  showVerificationFlow(student) {
     const modal = document.getElementById('modal-verify');
     const content = document.getElementById('verify-content');
     const sessionType = stateManager.getSessionType();
@@ -734,20 +734,22 @@ class TournamentApp {
       `).join('');
     }
     
+    const genderHTML = CONFIG.genders.map(g => `<button class="grid-button ${student.genderIdentity === g.id ? 'selected' : ''}" style="padding: 20px; font-size: 18px; font-weight: bold; border: 3px solid ${student.genderIdentity === g.id ? '#FFD700' : 'var(--color-secondary)'}; ${student.genderIdentity === g.id ? 'box-shadow: 0 0 15px #FFD700;' : ''}" onclick="app.selectVerifyGender('${student.id}', '${g.id}')">${g.icon} ${g.name}</button>`).join('');
+    
     content.innerHTML = `
       <div style="background: rgba(255, 215, 0, 0.1); border: 3px solid var(--color-secondary); border-radius: 12px; padding: 24px; margin-bottom: 16px; text-align: center;">
-        <p style="font-size: 16px; margin-bottom: 8px; opacity: 0.8;">STEP 2 - REVIEW</p>
+        <p style="font-size: 16px; margin-bottom: 8px; opacity: 0.8;">STEP 1 — REVIEW</p>
         <h3 style="font-size: 32px; margin-bottom: 8px; color: var(--color-secondary);">${student.name || `${student.first_name} ${student.last_name}`}</h3>
         <p style="font-size: 18px; opacity: 0.9;">${displayInfo}</p>
         <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">Review the student's status below</p>
       </div>
       
-      <!-- STEP 3 - WAIVER -->
+      <!-- STEP 2 - WAIVER -->
       <div style="background: rgba(255, 215, 0, 0.05); border: 2px solid ${waiverColor}; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
           <span style="font-size: 42px;">${waiverIcon}</span>
           <div style="flex: 1;">
-            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 3 - WAIVER</p>
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 2 — WAIVER</p>
             <strong style="font-size: 20px;">Waiver Status</strong>
             <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasWaiver ? 'Waiver signed and on file' : 'Waiver NOT signed'}</p>
           </div>
@@ -768,12 +770,12 @@ class TournamentApp {
         `}
       </div>
       
-      <!-- STEP 4 - PAYMENT -->
+      <!-- STEP 3 - PAYMENT -->
       <div style="background: rgba(255, 215, 0, 0.05); border: 2px solid ${paymentColor}; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
           <span style="font-size: 42px;">${paymentIcon}</span>
           <div style="flex: 1;">
-            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 4 - PAYMENT</p>
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 3 — PAYMENT</p>
             <strong style="font-size: 20px;">Payment Status</strong>
             <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasPayment ? 'Payment confirmed' : 'Payment NOT received'}</p>
           </div>
@@ -781,12 +783,12 @@ class TournamentApp {
         ${paymentControlsHTML}
       </div>
       
-      <!-- STEP 5 - DATA ENTRY -->
+      <!-- STEP 4 - RANK / AGE GROUP -->
       <div style="background: rgba(255, 215, 0, 0.05); border: 2px solid ${dataEntryColor}; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
           <span style="font-size: 42px;">${dataEntryIcon}</span>
           <div style="flex: 1;">
-            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 5 - DATA ENTRY</p>
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 4 — RANK / AGE GROUP</p>
             <strong style="font-size: 20px;">${sessionType === 'adult' ? 'Select Rank' : 'Select Age Group'}</strong>
             <p style="font-size: 14px; opacity: 0.8; margin-top: 4px;">${hasDataEntry ? 'Selection confirmed' : 'Please select an option'}</p>
           </div>
@@ -795,6 +797,8 @@ class TournamentApp {
           ${dataEntryHTML}
         </div>
       </div>
+      
+      <div style="background: rgba(255,215,0,0.05); border: 2px solid var(--color-secondary); border-radius: 12px; padding: 20px; margin-bottom: 16px;"><p style="font-size: 14px; opacity: 0.7; margin-bottom: 4px;">STEP 5 — GENDER</p><strong style="font-size: 20px;">Confirm Gender</strong><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px;">${genderHTML}</div></div>
       
       <!-- STEP 6 - CHECK IN -->
       <div style="text-align: center; margin-top: 24px;">
@@ -812,10 +816,6 @@ class TournamentApp {
     modal.style.display = 'flex';
   }
   
-  // Alias for backward compatibility
-  show5StepVerificationModal(student) {
-    this.show7StepVerificationModal(student);
-  }
   
   selectVerifyRank(studentId, rankId, group) {
     stateManager.updateStudent(studentId, {
@@ -824,7 +824,7 @@ class TournamentApp {
       currentGroup: group
     });
     const student = stateManager.getStudent(studentId);
-    this.show7StepVerificationModal(student);
+    this.showVerificationFlow(student);
   }
   
   selectVerifyAgeGroup(studentId, ageGroupId, group) {
@@ -834,8 +834,10 @@ class TournamentApp {
       currentGroup: group
     });
     const student = stateManager.getStudent(studentId);
-    this.show7StepVerificationModal(student);
+    this.showVerificationFlow(student);
   }
+  
+  selectVerifyGender(studentId, genderId) { const ringPreference = (genderId === 'non-binary' || genderId === 'prefer-not-say') ? (stateManager.getStudent(studentId).ringPreference || 'female') : genderId; stateManager.updateStudent(studentId, { genderIdentity: genderId, ringPreference: ringPreference }); const student = stateManager.getStudent(studentId); this.showVerificationFlow(student); }
   
   markPaymentUnpaid(studentId) {
     if (confirm('Mark this payment as unpaid? This will require re-verification.')) {
@@ -846,7 +848,7 @@ class TournamentApp {
       });
       
       const student = stateManager.getStudent(studentId);
-      this.show5StepVerificationModal(student);
+      this.showVerificationFlow(student);
       this.showSuccessMessage('Payment marked as unpaid');
     }
   }
@@ -859,7 +861,7 @@ class TournamentApp {
     });
     
     const student = stateManager.getStudent(studentId);
-    this.show5StepVerificationModal(student);
+    this.showVerificationFlow(student);
     this.showSuccessMessage('Cash payment confirmed! ✅');
   }
   
@@ -897,7 +899,7 @@ class TournamentApp {
       if (updatedStudent.waiver_signed || updatedStudent.signatureData) {
         clearInterval(this.waiverPollInterval);
         this.hideQRWaiverModal();
-        this.show5StepVerificationModal(updatedStudent);
+        this.showVerificationFlow(updatedStudent);
         this.showSuccessMessage('Waiver completed! ✅');
       }
     }, 3000);
@@ -1002,7 +1004,7 @@ class TournamentApp {
     const syncResult = await stateManager.syncWaiverToGoogleSheets(student);
     
     this.exitWaiverSignMode();
-    this.show5StepVerificationModal(student);
+    this.showVerificationFlow(student);
     
     if (syncResult.offline) {
       this.showSuccessMessage('Signature saved! ⚠️ Will sync when online');
@@ -1027,7 +1029,7 @@ class TournamentApp {
       });
       
       const student = stateManager.getStudent(studentId);
-      this.show5StepVerificationModal(student);
+      this.showVerificationFlow(student);
       this.showSuccessMessage('Waiver reset');
     }
   }
@@ -1120,7 +1122,7 @@ class TournamentApp {
       
       <div style="background: rgba(255, 0, 0, 0.1); border: 4px solid #FF0000; border-radius: 16px; padding: 32px; margin: 32px 0;">
         <div style="font-size: 72px; margin-bottom: 16px;">🏷️</div>
-        <h3 style="font-size: 32px; margin-bottom: 12px; font-weight: bold; color: #FF0000;">STEP 7 - ARMBAND REMINDER</h3>
+        <h3 style="font-size: 32px; margin-bottom: 12px; font-weight: bold; color: #FF0000;">STEP 7 — ARMBAND</h3>
         <p style="font-size: 24px; font-weight: bold; line-height: 1.4;">REQUIRED: Give student their armband now.</p>
       </div>
       
