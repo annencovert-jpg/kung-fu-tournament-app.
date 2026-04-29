@@ -1407,23 +1407,20 @@ class TournamentApp {
     const separateByRank = stateManager.state.settings.separateByRank || false;
     
     content.innerHTML = `
-      <div style="margin-bottom: 24px; background: rgba(255, 215, 0, 0.1); border: 2px solid var(--color-secondary); border-radius: 8px; padding: 16px;">
-        <h3 style="color: var(--color-secondary); margin-bottom: 12px;">Division Options</h3>
-        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 8px;">
-          <input type="checkbox" id="chk-separate-gender" ${separateByGender ? 'checked' : ''} style="width: 20px; height: 20px;">
-          <span style="font-size: 16px;">Separate by Gender</span>
+      <div class="sticky-controls">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px;">
+          <input type="checkbox" id="chk-separate-gender" ${separateByGender ? 'checked' : ''} style="width: 18px; height: 18px;">
+          Separate by Gender
         </label>
         ${sessionType === 'adult' ? `
-          <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 8px;">
-            <input type="checkbox" id="chk-separate-rank" ${separateByRank ? 'checked' : ''} style="width: 20px; height: 20px;">
-            <span style="font-size: 16px;">Separate by Rank</span>
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px;">
+            <input type="checkbox" id="chk-separate-rank" ${separateByRank ? 'checked' : ''} style="width: 18px; height: 18px;">
+            Separate by Rank
           </label>
         ` : ''}
+        <button class="btn-primary" style="margin-left: auto; padding: 10px 20px;" onclick="app.printLists()">🖨️ Print Ring Lists</button>
       </div>
-      <div id="groups-container"></div>
-      <div style="margin-top: 24px; text-align: center;">
-        <button class="btn-primary btn-large" onclick="app.printLists()">🖨️ Print Ring Lists</button>
-      </div>
+      <div id="groups-container" style="padding: 16px;"></div>
     `;
     
     // Add event listeners for checkboxes
